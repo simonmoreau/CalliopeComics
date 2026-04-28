@@ -7,6 +7,6 @@ namespace Application.Services.Gemini
 {
     public interface IGeminiClient
     {
-        Task<string> AnalyseImageAsync(string prompt, string imageFilePath);
+        Task<string> AnalyseImageAsync(string imageFilePath);
     }
 }

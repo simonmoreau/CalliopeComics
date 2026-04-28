@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-
 namespace Application.Services.Gemini
 {
     public class GeminiClient : IGeminiClient
@@ -21,12 +20,8 @@ namespace Application.Services.Gemini
             _client = new Client(apiKey: _settings.Gemini.ApiKey);
         }
 
-        public async Task<string> AnalyseImageAsync(string prompt, string imageFilePath)
+        public async Task<string> AnalyseImageAsync(string imageFilePath)
         {
-            if (string.IsNullOrWhiteSpace(prompt))
-            {
-                throw new ArgumentException("Prompt is required.", nameof(prompt));
-            }
 
             if (string.IsNullOrWhiteSpace(imageFilePath))
             {
@@ -41,6 +36,11 @@ namespace Application.Services.Gemini
             Google.GenAI.Types.File uploadedFile = await _client.Files.UploadAsync(filePath: imageFilePath);
 
             string model = "gemma-3-4b-it";
+
+            string prompt = "Based on this comic book cover, " +
+                "extract a search term that I can use to look" +
+                " for this specific issue in a comic book database." +
+                " Your response will only include the search term.";
 
             Content content = new Content
             {
@@ -63,22 +63,28 @@ namespace Application.Services.Gemini
 
             GenerateContentResponse response = await _client.Models.GenerateContentAsync(model: model, contents: contents);
 
+            string testResponse = string.Empty;
+
             if (!string.IsNullOrWhiteSpace(response.Text))
             {
-                return response.Text;
+                testResponse = response.Text;
             }
-
-            if (response.Candidates is not null &&
-                response.Candidates.Count > 0 &&
-                response.Candidates[0].Content is not null &&
-                response.Candidates[0]?.Content?.Parts is not null &&
-                response.Candidates[0]?.Content?.Parts?.Count > 0 &&
-                !string.IsNullOrWhiteSpace(response.Candidates[0]?.Content?.Parts?[0]?.Text))
+            else if (response.Candidates is not null &&
+                     response.Candidates.Count > 0 &&
+                     response.Candidates[0].Content is not null &&
+                     response.Candidates[0]?.Content?.Parts is not null &&
+                     response.Candidates[0]?.Content?.Parts?.Count > 0 &&
+                     !string.IsNullOrWhiteSpace(response.Candidates[0]?.Content?.Parts?[0]?.Text))
             {
-                return response.Candidates[0]?.Content?.Parts?[0]?.Text;
+                testResponse = response.Candidates[0]?.Content?.Parts?[0]?.Text ?? string.Empty;
             }
 
-            return string.Empty;
+            if (string.IsNullOrWhiteSpace(testResponse))
+            {
+                return string.Empty;
+            }
+
+            return testResponse;
         }
     }
 }

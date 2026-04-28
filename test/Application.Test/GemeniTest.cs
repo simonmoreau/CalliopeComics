@@ -32,13 +32,11 @@ namespace Application.Test
 
             GeminiClient geminiClient = new GeminiClient(options);
 
-            string prompt = "Based on this comic book cover, extract a search term that I can use to look for this specific issue in a comic book database. I want a single string with a few keywords.";
             string imageFilePath = @"C:\Users\smoreau\Downloads\Avengers_ANN_1998.png";
 
-            string result = await geminiClient.AnalyseImageAsync(prompt, imageFilePath);
+            string result = await geminiClient.AnalyseImageAsync(imageFilePath);
             // Assert  
             Assert.NotNull(result);
-            Assert.IsType<ApplicationSettings>(result);
         }
     }
 }
