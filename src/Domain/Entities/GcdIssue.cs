@@ -71,7 +71,7 @@ public partial class GcdIssue
     public string PublicationDate { get; set; } = null!;
 
     [Column("key_date", TypeName = "varchar(10)")]
-    public DateOnly KeyDate { get; set; }
+    public string? KeyDate { get; set; }
 
     [Column("sort_code")]
     public int SortCode { get; set; }
