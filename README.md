@@ -1,2 +1,2 @@
 # CalliopeComics
-A CLI to fetch comics Metadata
+A local Web-server for running automations
