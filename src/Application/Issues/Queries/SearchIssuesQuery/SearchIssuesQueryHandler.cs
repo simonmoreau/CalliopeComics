@@ -29,7 +29,7 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             }
 
 
-            string[] terms = request.SearchTerm
+            string[] terms = request.SearchTerm.Replace("&"," ")
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 
@@ -73,7 +73,9 @@ namespace Application.Issues.Queries.SearchIssuesQuery
                      );
             }
 
-            List<GcdIssue> issues = await issuesQuery.Take(100).ToListAsync(cancellationToken);
+            List<GcdIssue> issues = await issuesQuery
+                .OrderBy(i => i.Created)
+                .Take(100).ToListAsync(cancellationToken);
 
             List<IssueDto> results = issues
                 .Select(issue => new

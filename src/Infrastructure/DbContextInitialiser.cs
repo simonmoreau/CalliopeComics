@@ -58,20 +58,20 @@ namespace Infrastructure
 
             ApplicationSettings appSettings = serviceProvider.GetRequiredService<IOptions<ApplicationSettings>>().Value;
 
-            List<CLIENT> clients = new List<CLIENT>
-            {
-                new CLIENT
-                {
-                    NAME = "Client1",
-                    IP = "192.168.1.1"
-                },
-                new CLIENT
-                {
-                    NAME = "Client2",
-                    IP = "192.168.1.2"
-                }
-            };
-            _context.CLIENTS.AddRange(clients);
+            //List<CLIENT> clients = new List<CLIENT>
+            //{
+            //    new CLIENT
+            //    {
+            //        NAME = "Client1",
+            //        IP = "192.168.1.1"
+            //    },
+            //    new CLIENT
+            //    {
+            //        NAME = "Client2",
+            //        IP = "192.168.1.2"
+            //    }
+            //};
+            //_context.CLIENTS.AddRange(clients);
 
 
             await _context.SaveChangesAsync();

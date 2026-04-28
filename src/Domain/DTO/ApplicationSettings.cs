@@ -10,6 +10,12 @@
         /// </summary>
         public AuthenticationSettings Authentication { get; set; } = new AuthenticationSettings();
         public string StoragePath { get; set; } = "";
+        public Gemini Gemini { get; set; } = new Gemini();
+    }
+
+    public class Gemini
+    {
+        public string ApiKey { get; set; } = "";
     }
 
     /// <summary>
