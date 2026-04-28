@@ -16,7 +16,15 @@ public static class ConfigureServices
                 builder.MigrationsAssembly(typeof(Infrastructure.AppDbContext).Assembly.FullName);
             }));
 
+                services.AddDbContext<Infrastructure.GcdDbContext>(options =>
+        options.UseSqlite(configuration.GetConnectionString("GcdConnection"),
+            builder =>
+            {
+                builder.MigrationsAssembly(typeof(Infrastructure.GcdDbContext).Assembly.FullName);
+            }));
+
         services.AddScoped<IDbContext>(provider => provider.GetRequiredService<Infrastructure.AppDbContext>());
+        services.AddScoped<IGcdDbContext>(provider => provider.GetRequiredService<Infrastructure.GcdDbContext>());
         services.AddScoped<Infrastructure.DbContextInitialiser>();
 
         return services;
