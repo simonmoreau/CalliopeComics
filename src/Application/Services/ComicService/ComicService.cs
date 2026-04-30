@@ -24,13 +24,13 @@ namespace Application.Services.ComicService
             int volume = ParsePositiveInteger(issue.Volume);
             int pageCount = issue.PageCount ?? issue.GcdStories.Where(story => story.PageCount.HasValue).Sum(story => story.PageCount!.Value);
 
-            string writer = GetCredits(issue, "writer", "script");
-            string penciller = GetCredits(issue, "penciller", "penciler", "pencils");
-            string inker = GetCredits(issue, "inker", "inks");
-            string colorist = GetCredits(issue, "colorist", "colors", "color");
-            string letterer = GetCredits(issue, "letterer", "letters");
-            string coverArtist = GetCredits(issue, "cover", "cover artist", "covers", "cover pencils", "cover inks", "cover colors");
-            string editor = GetCredits(issue, "editor");
+            string writer = GetCredits(issue, "script");
+            string penciller = GetCredits(issue, "pencils");
+            string inker = GetCredits(issue, "inks");
+            string colorist = GetCredits(issue, "colors");
+            string letterer = GetCredits(issue, "letters");
+            string coverArtist = GetCredits(issue, "painting");
+            string editor = GetCredits(issue, "editing");
             string genre = JoinDistinct(issue.GcdStories.Select(story => story.Genre));
             string characters = JoinDistinct(issue.GcdStories.Select(story => story.Characters));
             string storyArc = JoinDistinct(issue.GcdStories.Select(story => story.Feature));
@@ -57,7 +57,7 @@ namespace Application.Services.ComicService
                 Colorist = colorist,
                 Letterer = letterer,
                 CoverArtist = coverArtist,
-                Editor = !string.IsNullOrWhiteSpace(issue.Editing) ? issue.Editing : editor,
+                Editor = editor,
                 Publisher = issue.IndiciaPublisher?.Name ?? issue.Series?.Publisher?.Name ?? string.Empty,
                 Imprint = issue.IndiciaPublisher?.Name ?? string.Empty,
                 Genre = genre,
@@ -84,15 +84,28 @@ namespace Application.Services.ComicService
             return comicInfo;
         }
 
-        private static string GetCredits(GcdIssue issue, params string[] acceptedTypes)
+        private string GetCredits(GcdIssue issue, params string[] acceptedTypes)
         {
-            return JoinDistinct(issue.GcdIssueCredits
-                .Where(credit => credit.CreditType is not null && acceptedTypes.Contains(credit.CreditType.Name, StringComparer.OrdinalIgnoreCase))
-                .Select(GetCreditName));
+            var test = issue.GcdStories.SelectMany(story => story.GcdStoryCredits).ToList().Select(c => c.CreditType.Name).ToList();
+
+            IEnumerable<string> storyCredits = issue.GcdStories.SelectMany(story => story.GcdStoryCredits)
+                .Where(credit => credit.CreditType is not null && acceptedTypes.Any(acceptedType => credit.CreditType.Name.Contains(acceptedType, StringComparison.OrdinalIgnoreCase)))
+                .Select(GetStoryCreditName);
+
+            IEnumerable<string> issueCredits = issue.GcdIssueCredits
+                .Where(credit => credit.CreditType is not null && acceptedTypes.Any(acceptedType => credit.CreditType.Name.Contains(acceptedType, StringComparison.OrdinalIgnoreCase)))
+                .Select(GetCreditName);
+
+            return JoinDistinct(storyCredits.Concat(issueCredits).Distinct());
         }
 
-        private static string GetCreditName(GcdIssueCredit credit)
+        private string GetCreditName(GcdIssueCredit credit)
         {
+            if (!string.IsNullOrWhiteSpace(credit.Creator.Creator.GcdOfficialName))
+            {
+                return credit.Creator.Creator.GcdOfficialName;
+            }
+
             if (!string.IsNullOrWhiteSpace(credit.CreditedAs))
             {
                 return credit.CreditedAs;
@@ -106,7 +119,27 @@ namespace Application.Services.ComicService
             return credit.Creator?.Name ?? string.Empty;
         }
 
-        private static string JoinDistinct(System.Collections.Generic.IEnumerable<string?> values)
+        private string GetStoryCreditName(GcdStoryCredit credit)
+        {
+            if (!string.IsNullOrWhiteSpace(credit.Creator.Creator.GcdOfficialName))
+            {
+                return credit.Creator.Creator.GcdOfficialName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(credit.CreditedAs))
+            {
+                return credit.CreditedAs;
+            }
+
+            if (!string.IsNullOrWhiteSpace(credit.CreditName))
+            {
+                return credit.CreditName;
+            }
+
+            return credit.Creator?.Name ?? string.Empty;
+        }
+
+        private string JoinDistinct(System.Collections.Generic.IEnumerable<string?> values)
         {
             string[] normalized = values
                 .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -118,7 +151,7 @@ namespace Application.Services.ComicService
             return string.Join(", ", normalized);
         }
 
-        private static int ParsePositiveInteger(string value)
+        private int ParsePositiveInteger(string value)
         {
             if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) && parsed > 0)
             {
@@ -128,7 +161,7 @@ namespace Application.Services.ComicService
             return -1;
         }
 
-        private static (int Year, int Month, int Day) GetDateParts(GcdIssue issue)
+        private (int Year, int Month, int Day) GetDateParts(GcdIssue issue)
         {
             (int Year, int Month, int Day) keyDate = ParseDate(issue.KeyDate);
             if (keyDate.Year != -1)
@@ -145,7 +178,7 @@ namespace Application.Services.ComicService
             return ParseDate(issue.PublicationDate);
         }
 
-        private static (int Year, int Month, int Day) ParseDate(string? value)
+        private (int Year, int Month, int Day) ParseDate(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -179,7 +212,7 @@ namespace Application.Services.ComicService
             return (-1, -1, -1);
         }
 
-        private static YesNo GetBlackAndWhite(GcdIssue issue)
+        private YesNo GetBlackAndWhite(GcdIssue issue)
         {
             string normalized = Normalize(issue.Series?.Color ?? string.Empty);
             if (normalized.Contains("BLACKANDWHITE", StringComparison.Ordinal) || normalized.Contains("BW", StringComparison.Ordinal))
@@ -195,7 +228,7 @@ namespace Application.Services.ComicService
             return YesNo.Unknown;
         }
 
-        private static Manga GetManga(GcdIssue issue, string genre)
+        private Manga GetManga(GcdIssue issue, string genre)
         {
             string source = JoinDistinct(new[] { issue.Series?.Format, issue.Series?.PublishingFormat, issue.Series?.PublicationType?.Name, genre });
             string normalized = Normalize(source);
@@ -207,7 +240,7 @@ namespace Application.Services.ComicService
             return Manga.Unknown;
         }
 
-        private static AgeRating GetAgeRating(string? rating)
+        private AgeRating GetAgeRating(string? rating)
         {
             string normalized = Normalize(rating ?? string.Empty);
 
@@ -239,13 +272,13 @@ namespace Application.Services.ComicService
             return AgeRating.Unknown;
         }
 
-        private static string Normalize(string value)
+        private string Normalize(string value)
         {
             char[] chars = value.ToUpperInvariant().Where(character => char.IsLetterOrDigit(character)).ToArray();
             return new string(chars);
         }
 
-        private static string GetMainCharacterOrTeam(string characters, string teams)
+        private string GetMainCharacterOrTeam(string characters, string teams)
         {
             if (!string.IsNullOrWhiteSpace(teams))
             {

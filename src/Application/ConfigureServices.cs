@@ -1,4 +1,5 @@
 ﻿using Application.Common.Behaviors;
+using Application.Services.ComicService;
 using Application.Services.FileStorage;
 using Application.Services.Gemini;
 using Domain.DTO;
@@ -25,9 +26,7 @@ namespace Application.Interfaces
 
             services.AddSingleton<ILocalFileStorageService, LocalFileStorageService>();
             services.AddSingleton<IGeminiClient, GeminiClient>();
-
-
-
+            services.AddSingleton<IComicService, ComicService>();
 
             return services;
         }
