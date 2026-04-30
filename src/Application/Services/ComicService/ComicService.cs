@@ -1,7 +1,13 @@
 ﻿using Domain.Entities;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Common;
+using SharpCompress.Writers;
 using System;
 using System.Globalization;
+using System.IO.Compression;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace Application.Services.ComicService
 {
@@ -9,6 +15,169 @@ namespace Application.Services.ComicService
     {
         public ComicService()
         {
+        }
+
+        public string GetComicFirstPage(string comicsPath)
+        {
+            if (string.IsNullOrWhiteSpace(comicsPath))
+            {
+                throw new ArgumentException("The comic archive path is required.", nameof(comicsPath));
+            }
+
+            if (!File.Exists(comicsPath))
+            {
+                throw new FileNotFoundException("The comic archive file was not found.", comicsPath);
+            }
+
+            string extension = Path.GetExtension(comicsPath);
+            string normalizedExtension = extension.ToLowerInvariant();
+            if (normalizedExtension is not ".cbz" and not ".cbr" and not ".crz" and not ".crb")
+            {
+                throw new NotSupportedException($"Unsupported comic archive extension '{extension}'.");
+            }
+
+            string extractionDirectoryPath = Path.Combine(Path.GetTempPath(), $"calliope_extract_{Guid.NewGuid():N}");
+            string outputDirectoryPath = Path.Combine(Path.GetTempPath(), $"calliope_firstpage_{Guid.NewGuid():N}");
+
+            Directory.CreateDirectory(extractionDirectoryPath);
+            Directory.CreateDirectory(outputDirectoryPath);
+
+            try
+            {
+                if (normalizedExtension is ".cbz" or ".crz")
+                {
+                    ZipFile.ExtractToDirectory(comicsPath, extractionDirectoryPath);
+                }
+                else
+                {
+                    using RarArchive archive = RarArchive.Open(comicsPath);
+                    foreach (IArchiveEntry entry in archive.Entries.Where(archiveEntry => !archiveEntry.IsDirectory))
+                    {
+                        entry.WriteToDirectory(extractionDirectoryPath, new ExtractionOptions
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
+                    }
+                }
+
+                string[] imageFiles = Directory.EnumerateFiles(extractionDirectoryPath, "*", SearchOption.AllDirectories)
+                    .Where(IsSupportedImageFile)
+                    .OrderBy(filePath => Path.GetRelativePath(extractionDirectoryPath, filePath), StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                if (imageFiles.Length == 0)
+                {
+                    throw new InvalidOperationException("No image file was found in the comic archive.");
+                }
+
+                string firstImagePath = imageFiles[0];
+                string destinationImagePath = Path.Combine(outputDirectoryPath, $"first_page{Path.GetExtension(firstImagePath)}");
+                File.Copy(firstImagePath, destinationImagePath, true);
+
+                return destinationImagePath;
+            }
+            finally
+            {
+                if (Directory.Exists(extractionDirectoryPath))
+                {
+                    Directory.Delete(extractionDirectoryPath, true);
+                }
+            }
+        }
+
+        public void SaveComicInfo(ComicInfo comicInfo, string comicsPath)
+        {
+            if (comicInfo is null)
+            {
+                throw new ArgumentNullException(nameof(comicInfo));
+            }
+
+            if (string.IsNullOrWhiteSpace(comicsPath))
+            {
+                throw new ArgumentException("The comic archive path is required.", nameof(comicsPath));
+            }
+
+            if (!File.Exists(comicsPath))
+            {
+                throw new FileNotFoundException("The comic archive file was not found.", comicsPath);
+            }
+
+            string extension = Path.GetExtension(comicsPath).ToLowerInvariant();
+            if (extension is not ".cbz" and not ".cbr" and not ".crz" and not ".crb")
+            {
+                throw new NotSupportedException($"Unsupported comic archive extension '{extension}'.");
+            }
+
+            string extractDirectoryPath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_extract_{Guid.NewGuid():N}");
+            string xmlFilePath = Path.Combine(extractDirectoryPath, "ComicInfo.xml");
+            string temporaryArchivePath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_archive_{Guid.NewGuid():N}{Path.GetExtension(comicsPath)}");
+
+            Directory.CreateDirectory(extractDirectoryPath);
+
+            try
+            {
+                if (extension is ".cbz" or ".crz")
+                {
+                    ZipFile.ExtractToDirectory(comicsPath, extractDirectoryPath);
+                }
+                else
+                {
+                    using RarArchive archive = RarArchive.Open(comicsPath);
+                    foreach (IArchiveEntry entry in archive.Entries.Where(archiveEntry => !archiveEntry.IsDirectory))
+                    {
+                        entry.WriteToDirectory(extractDirectoryPath, new ExtractionOptions
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
+                    }
+                }
+
+                XmlSerializer serializer = new XmlSerializer(typeof(ComicInfo));
+                using (FileStream xmlFileStream = new FileStream(xmlFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    serializer.Serialize(xmlFileStream, comicInfo);
+                }
+
+                if (extension is ".cbz" or ".crz")
+                {
+                    ZipFile.CreateFromDirectory(extractDirectoryPath, temporaryArchivePath, CompressionLevel.Optimal, false);
+                }
+                else
+                {
+                    using FileStream archiveStream = new FileStream(temporaryArchivePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    using IWriter writer = WriterFactory.Open(archiveStream, ArchiveType.Rar, new WriterOptions(CompressionType.Rar));
+
+                    string[] files = Directory.EnumerateFiles(extractDirectoryPath, "*", SearchOption.AllDirectories).ToArray();
+                    foreach (string filePath in files)
+                    {
+                        string relativePath = Path.GetRelativePath(extractDirectoryPath, filePath);
+                        using FileStream entryStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        writer.Write(relativePath, entryStream, File.GetLastWriteTime(filePath));
+                    }
+                }
+
+                File.Copy(temporaryArchivePath, comicsPath, true);
+            }
+            finally
+            {
+                if (Directory.Exists(extractDirectoryPath))
+                {
+                    Directory.Delete(extractDirectoryPath, true);
+                }
+
+                if (File.Exists(temporaryArchivePath))
+                {
+                    File.Delete(temporaryArchivePath);
+                }
+            }
+        }
+
+        private bool IsSupportedImageFile(string filePath)
+        {
+            string extension = Path.GetExtension(filePath).ToLowerInvariant();
+            return extension is ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp" or ".tif" or ".tiff";
         }
 
         public ComicInfo CreateComicInfo(GcdIssue issue)

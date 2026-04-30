@@ -1,12 +1,11 @@
 ﻿using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Application.Services.ComicService
 {
     public interface IComicService
     {
+        string GetComicFirstPage(string comicsPath);
+        void SaveComicInfo(ComicInfo comicInfo, string comicsPath);
         ComicInfo CreateComicInfo(GcdIssue issue);
     }
 }
