@@ -32,7 +32,6 @@ namespace Application.Issues.Queries.SearchIssuesQuery
                 return new List<IssueDto>();
             }
 
-
             string[] terms = request.SearchTerm.Replace("&"," ")
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -93,29 +92,6 @@ namespace Application.Issues.Queries.SearchIssuesQuery
                 .Take(10)
                 .Select(result => new IssueDto(result.Issue))
                 .ToList();
-
-            GcdIssue issue = await _context.GcdIssues.Where(i => i.Id == results.First().Id)
-                    .Include(issue => issue.Series)
-                            .ThenInclude(series => series.Publisher)
-                        .Include(issue => issue.Series)
-                            .ThenInclude(series => series.Language)
-                        .Include(issue => issue.Series)
-                            .ThenInclude(series => series.PublicationType)
-                        .Include(issue => issue.VariantOf)
-                            .ThenInclude(variantOf => variantOf.Series)
-                        .Include(issue => issue.IndiciaPublisher)
-                        .Include(issue => issue.GcdStories)
-                            .ThenInclude(s => s.GcdStoryCredits).ThenInclude(credit => credit.CreditType)
-                        .Include(issue => issue.GcdStories)
-                            .ThenInclude(s => s.GcdStoryCredits).ThenInclude(credit => credit.Creator).ThenInclude(c => c.Creator)
-                        .Include(issue => issue.GcdIssueCredits)
-                            .ThenInclude(credit => credit.CreditType)
-                        .Include(issue => issue.GcdIssueCredits)
-                            .ThenInclude(credit => credit.Creator).ThenInclude(c => c.Creator)
-                        .AsSplitQuery()
-                        .FirstAsync();
-
-            ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
 
             return results;
         }
