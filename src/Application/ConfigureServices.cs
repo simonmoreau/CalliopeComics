@@ -27,6 +27,7 @@ namespace Application.Interfaces
             services.AddSingleton<ILocalFileStorageService, LocalFileStorageService>();
             services.AddSingleton<IGeminiClient, GeminiClient>();
             services.AddSingleton<IComicService, ComicService>();
+            services.AddHostedService<ComicsProcessorService>();
 
             return services;
         }
