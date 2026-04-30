@@ -98,6 +98,7 @@ namespace Application.Services.ComicService
 
                         if (issues.Count == 0)
                         {
+                            _logger.LogWarning("No issue match found for '{searchTerm}'.", searchTerm);
                             _logger.LogWarning("No issue match found for archive '{ArchivePath}'.", archivePath);
                             continue;
                         }
@@ -106,10 +107,12 @@ namespace Application.Services.ComicService
                         GcdIssue issue = await mediator.Send(detailsQuery, stoppingToken);
                         ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
 
-                        string copiedArchivePath = Path.Combine(processedStoragePath, Path.GetFileName(archivePath));
                         
-                        _comicService.SaveComicInfo(comicInfo, copiedArchivePath);
-                        File.Move(archivePath, copiedArchivePath, true);
+                        string savedArchivePath = _comicService.SaveComicInfo(comicInfo, archivePath);
+
+                        string copiedArchivePath = Path.Combine(processedStoragePath, Path.GetFileName(savedArchivePath));
+
+                        File.Move(savedArchivePath, copiedArchivePath, true);
 
                         _logger.LogInformation(
                             "Processed archive '{ArchivePath}'. SearchTerm='{SearchTerm}'. Matches={MatchCount}. Saved='{SavedArchivePath}'.",

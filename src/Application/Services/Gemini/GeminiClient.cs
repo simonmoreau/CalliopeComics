@@ -39,8 +39,9 @@ namespace Application.Services.Gemini
 
             string prompt = "Based on this comic book cover, " +
                 "extract a search term that I can use to look" +
-                " for this specific issue in a comic book database." +
-                " Your response will only include the search term.";
+                " for this specific issue in a comic book database. " +
+                "Look for thinks like title, the series, the issue number or the publication year (in the yyyy format)." +
+                " Your response will only include the search term with less than 4 words.";
 
             Content content = new Content
             {

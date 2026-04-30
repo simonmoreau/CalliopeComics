@@ -32,7 +32,7 @@ namespace Application.Issues.Queries.SearchIssuesQuery
                 return new List<IssueDto>();
             }
 
-            string[] terms = request.SearchTerm.Replace("&"," ")
+            string[] terms = request.SearchTerm.Replace("&"," ").Replace("#", " ")
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 

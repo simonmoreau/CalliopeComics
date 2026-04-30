@@ -2,7 +2,6 @@
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
-using SharpCompress.Writers;
 using System;
 using System.Globalization;
 using System.IO.Compression;
@@ -86,7 +85,7 @@ namespace Application.Services.ComicService
             }
         }
 
-        public void SaveComicInfo(ComicInfo comicInfo, string comicsPath)
+        public string SaveComicInfo(ComicInfo comicInfo, string comicsPath)
         {
             if (comicInfo is null)
             {
@@ -109,19 +108,19 @@ namespace Application.Services.ComicService
                 throw new NotSupportedException($"Unsupported comic archive extension '{extension}'.");
             }
 
+            bool isRarBasedArchive = extension is ".cbr" or ".crb";
             string extractDirectoryPath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_extract_{Guid.NewGuid():N}");
             string xmlFilePath = Path.Combine(extractDirectoryPath, "ComicInfo.xml");
-            string temporaryArchivePath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_archive_{Guid.NewGuid():N}{Path.GetExtension(comicsPath)}");
+            string temporaryArchivePath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_archive_{Guid.NewGuid():N}.cbz");
+            string destinationArchivePath = isRarBasedArchive
+                ? Path.ChangeExtension(comicsPath, ".cbz")
+                : comicsPath;
 
             Directory.CreateDirectory(extractDirectoryPath);
 
             try
             {
-                if (extension is ".cbz" or ".crz")
-                {
-                    ZipFile.ExtractToDirectory(comicsPath, extractDirectoryPath);
-                }
-                else
+                if (isRarBasedArchive)
                 {
                     using RarArchive archive = RarArchive.Open(comicsPath);
                     foreach (IArchiveEntry entry in archive.Entries.Where(archiveEntry => !archiveEntry.IsDirectory))
@@ -133,6 +132,10 @@ namespace Application.Services.ComicService
                         });
                     }
                 }
+                else
+                {
+                    ZipFile.ExtractToDirectory(comicsPath, extractDirectoryPath);
+                }
 
                 XmlSerializer serializer = new XmlSerializer(typeof(ComicInfo));
                 using (FileStream xmlFileStream = new FileStream(xmlFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
@@ -140,25 +143,15 @@ namespace Application.Services.ComicService
                     serializer.Serialize(xmlFileStream, comicInfo);
                 }
 
-                if (extension is ".cbz" or ".crz")
-                {
-                    ZipFile.CreateFromDirectory(extractDirectoryPath, temporaryArchivePath, CompressionLevel.Optimal, false);
-                }
-                else
-                {
-                    using FileStream archiveStream = new FileStream(temporaryArchivePath, FileMode.Create, FileAccess.Write, FileShare.None);
-                    using IWriter writer = WriterFactory.Open(archiveStream, ArchiveType.Rar, new WriterOptions(CompressionType.Rar));
+                ZipFile.CreateFromDirectory(extractDirectoryPath, temporaryArchivePath, CompressionLevel.Optimal, false);
+                File.Copy(temporaryArchivePath, destinationArchivePath, true);
 
-                    string[] files = Directory.EnumerateFiles(extractDirectoryPath, "*", SearchOption.AllDirectories).ToArray();
-                    foreach (string filePath in files)
-                    {
-                        string relativePath = Path.GetRelativePath(extractDirectoryPath, filePath);
-                        using FileStream entryStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                        writer.Write(relativePath, entryStream, File.GetLastWriteTime(filePath));
-                    }
+                if (isRarBasedArchive && !string.Equals(destinationArchivePath, comicsPath, StringComparison.OrdinalIgnoreCase) && File.Exists(comicsPath))
+                {
+                    File.Delete(comicsPath);
                 }
 
-                File.Copy(temporaryArchivePath, comicsPath, true);
+                return destinationArchivePath;
             }
             finally
             {
