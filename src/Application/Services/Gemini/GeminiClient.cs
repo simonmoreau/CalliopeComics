@@ -20,7 +20,7 @@ namespace Application.Services.Gemini
             _client = new Client(apiKey: _settings.Gemini.ApiKey);
         }
 
-        public async Task<string> AnalyseImageAsync(string imageFilePath)
+        public async Task<string> AnalyseImageAsync(string imageFilePath, string comicBookFileName)
         {
 
             if (string.IsNullOrWhiteSpace(imageFilePath))
@@ -37,11 +37,11 @@ namespace Application.Services.Gemini
 
             string model = "gemma-3-4b-it";
 
-            string prompt = "Based on this comic book cover, " +
-                "extract a search term that I can use to look" +
+            string prompt = "This is the cover a comic book, its filename is '" + comicBookFileName + "'. " +
+                "Extract from this cover and filename a search term that I can use to look" +
                 " for this specific issue in a comic book database. " +
-                "Look for thinks like title, the series, the issue number or the publication year (in the yyyy format)." +
-                " Your response will only include the search term with less than 4 words.";
+                "Look for the title, the series, the issue number and the publication year (in the yyyy format)." +
+                " Your response will only include the search term.";
 
             Content content = new Content
             {

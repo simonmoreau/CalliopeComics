@@ -85,7 +85,10 @@ namespace Application.Services.ComicService
                     try
                     {
                         firstPagePath = _comicService.GetComicFirstPage(archivePath);
-                        string searchTerm = await _geminiClient.AnalyseImageAsync(firstPagePath);
+                        string comicBookName = Path.GetFileName(archivePath);
+                        string directoryName = Path.GetDirectoryName(archivePath) ?? string.Empty;
+                        string combicBookPath = Path.Combine(directoryName, comicBookName);
+                        string searchTerm = await _geminiClient.AnalyseImageAsync(firstPagePath, combicBookPath);
 
                         if (string.IsNullOrWhiteSpace(searchTerm))
                         {

@@ -34,7 +34,7 @@ namespace Application.Test
 
             string imageFilePath = @"C:\Users\smoreau\Downloads\Avengers_ANN_1998.png";
 
-            string result = await geminiClient.AnalyseImageAsync(imageFilePath);
+            string result = await geminiClient.AnalyseImageAsync(imageFilePath, imageFilePath);
             // Assert  
             Assert.NotNull(result);
         }

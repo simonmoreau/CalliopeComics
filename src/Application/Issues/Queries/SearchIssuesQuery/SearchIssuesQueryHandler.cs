@@ -32,9 +32,9 @@ namespace Application.Issues.Queries.SearchIssuesQuery
                 return new List<IssueDto>();
             }
 
-            string[] terms = request.SearchTerm.Replace("&"," ").Replace("#", " ")
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
+            string[] caractersToRemoves = ["<", ">",",", "\"", "'", ";", ":", "&", "#", "(", ")","[","]","{","}"];
+            string sanitizedSearchTerm = caractersToRemoves.Aggregate(request.SearchTerm, (current, c) => current.Replace(c, " "));
+            string[] terms = sanitizedSearchTerm.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             IQueryable<GcdIssue> issuesQuery = _context.GcdIssues
                         .Include(issue => issue.Series)
