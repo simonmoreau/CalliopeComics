@@ -35,56 +35,52 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             string[] caractersToRemoves = ["<", ">",",", "\"", "'", ";", ":", "&", "#", "(", ")","[","]","{","}"];
             string sanitizedSearchTerm = caractersToRemoves.Aggregate(request.SearchTerm, (current, c) => current.Replace(c, " "));
             string[] terms = sanitizedSearchTerm.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            string[] normalizedTerms = terms
+                .Select(NormalizeSearchTerm)
+                .ToArray();
+
 
             IQueryable<GcdIssue> issuesQuery = _context.GcdIssues
                         .Include(issue => issue.Series)
                         .ThenInclude(series => series.Publisher);
 
-            foreach (string term in terms)
+            foreach (string term in normalizedTerms)
             {
+                if (string.IsNullOrWhiteSpace(term)) continue;
+
+                
                 issuesQuery = issuesQuery.Where(issue =>
                         EF.Functions.Like(issue.Number, $"%{term}%") ||
                         EF.Functions.Like(issue.Volume, $"%{term}%") ||
                         EF.Functions.Like(issue.PublicationDate, $"%{term}%") ||
                         (issue.KeyDate != null && EF.Functions.Like(issue.KeyDate, $"%{term}%")) ||
-                        EF.Functions.Like(issue.Price, $"%{term}%") ||
-                        EF.Functions.Like(issue.IndiciaFrequency, $"%{term}%") ||
                         EF.Functions.Like(issue.Editing, $"%{term}%") ||
                         EF.Functions.Like(issue.Notes, $"%{term}%") ||
-                        EF.Functions.Like(issue.Isbn, $"%{term}%") ||
-                        EF.Functions.Like(issue.ValidIsbn, $"%{term}%") ||
                         EF.Functions.Like(issue.VariantName, $"%{term}%") ||
-                        EF.Functions.Like(issue.Barcode, $"%{term}%") ||
                         EF.Functions.Like(issue.Title, $"%{term}%") ||
                         EF.Functions.Like(issue.OnSaleDate, $"%{term}%") ||
-                        EF.Functions.Like(issue.Rating, $"%{term}%") ||
-                        EF.Functions.Like(issue.IndiciaPrinterSourcedBy, $"%{term}%") ||
                         EF.Functions.Like(issue.Series.Name, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.SortName, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.Format, $"%{term}%") ||
                         EF.Functions.Like(issue.Series.PublicationDates, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.TrackingNotes, $"%{term}%") ||
                         EF.Functions.Like(issue.Series.Notes, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.Color, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.Dimensions, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.PaperStock, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.Binding, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.PublishingFormat, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.Publisher.Name, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.Publisher.Notes, $"%{term}%") ||
-                        EF.Functions.Like(issue.Series.Publisher.Url, $"%{term}%")
+                        EF.Functions.Like(issue.Series.Publisher.Name, $"%{term}%")
                      );
             }
+
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             List<GcdIssue> issues = await issuesQuery
                 .OrderBy(i => i.Created)
                 .Take(100).ToListAsync(cancellationToken);
 
+            stopwatch.Stop();
+            _logger.LogInformation("SearchIssues query executed in {ElapsedMilliseconds} ms and returned {IssueCount} issues.", stopwatch.ElapsedMilliseconds, issues.Count);
+
             List<IssueDto> results = issues
                 .Select(issue => new
                 {
                     Issue = issue,
-                    Score = CalculateWeightedScore(issue, terms)
+                    Score = CalculateWeightedScore(issue, normalizedTerms)
                 })
                 .Where(result => result.Score > 0)
                 .OrderByDescending(result => result.Score)
@@ -94,6 +90,16 @@ namespace Application.Issues.Queries.SearchIssuesQuery
                 .ToList();
 
             return results;
+        }
+
+        private static string NormalizeSearchTerm(string term)
+        {
+            if (int.TryParse(term, out int number))
+            {
+                return number.ToString();
+            }
+
+            return term;
         }
 
         private int CalculateWeightedScore(GcdIssue issue, string[] terms)
