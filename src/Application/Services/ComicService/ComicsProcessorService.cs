@@ -90,6 +90,8 @@ namespace Application.Services.ComicService
                         string combicBookPath = Path.Combine(directoryName, comicBookName);
                         string searchTerm = await _geminiClient.AnalyseImageAsync(firstPagePath, combicBookPath);
 
+                        _logger.LogInformation("Generated search term for archive '{ArchivePath}': '{SearchTerm}'.", archivePath, searchTerm);
+
                         if (string.IsNullOrWhiteSpace(searchTerm))
                         {
                             _logger.LogWarning("No search term generated for archive '{ArchivePath}'.", archivePath);
@@ -101,8 +103,7 @@ namespace Application.Services.ComicService
 
                         if (issues.Count == 0)
                         {
-                            _logger.LogWarning("No issue match found for '{searchTerm}'.", searchTerm);
-                            _logger.LogWarning("No issue match found for archive '{ArchivePath}'.", archivePath);
+                            _logger.LogWarning("No issue match found for '{searchTerm}''{ArchivePath}'.", searchTerm, archivePath);
                             continue;
                         }
 
