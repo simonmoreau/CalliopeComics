@@ -40,7 +40,7 @@ namespace Application.Services.Gemini
             string prompt = "This is the cover a comic book, its filename is '" + comicBookFileName + "'. " +
                 "Extract from this cover and filename a search term that I can use to look" +
                 " for this specific issue in a comic book database. " +
-                "Look for the title, the series, the issue number and the publication year (in the yyyy format)." +
+                "Look only for the title, the series, the issue number and the publication year (in the yyyy format). " +
                 " Your response will only include the search term.";
 
             Content content = new Content

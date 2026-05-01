@@ -225,7 +225,7 @@ namespace Application.Services.ComicService
                 Publisher = issue.IndiciaPublisher?.Name ?? issue.Series?.Publisher?.Name ?? string.Empty,
                 Imprint = issue.IndiciaPublisher?.Name ?? string.Empty,
                 Genre = genre,
-                Web = JoinDistinct(new[] { gcdWeb, web }),
+                Web = JoinDistinct(new[] { gcdWeb }),
                 PageCount = pageCount,
                 LanguageISO = issue.Series?.Language?.Code ?? string.Empty,
                 Format = issue.Series?.Format ?? issue.Series?.PublishingFormat ?? string.Empty,

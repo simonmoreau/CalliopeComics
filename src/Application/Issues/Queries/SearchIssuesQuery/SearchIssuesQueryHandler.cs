@@ -31,8 +31,8 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             {
                 return new List<IssueDto>();
             }
-
-            string[] caractersToRemoves = ["<", ">",",", "\"", "'", ";", ":", "&", "#", "(", ")","[","]","{","}"];
+            
+            string[] caractersToRemoves = ["<", ">", "-", ",","\"", "'", ";", ":", "&", "#", "(", ")","[","]","{","}"];
             string sanitizedSearchTerm = caractersToRemoves.Aggregate(request.SearchTerm, (current, c) => current.Replace(c, " "));
             string[] terms = sanitizedSearchTerm.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             string[] normalizedTerms = terms
@@ -43,6 +43,7 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             IQueryable<GcdIssue> issuesQuery = _context.GcdIssues
                         .Include(issue => issue.Series)
                         .ThenInclude(series => series.Publisher);
+
 
             foreach (string term in normalizedTerms)
             {
@@ -75,6 +76,21 @@ namespace Application.Issues.Queries.SearchIssuesQuery
 
             stopwatch.Stop();
             _logger.LogInformation("SearchIssues query executed in {ElapsedMilliseconds} ms and returned {IssueCount} issues.", stopwatch.ElapsedMilliseconds, issues.Count);
+
+            if (issues.Count == 100)
+            {
+                IQueryable<GcdIssue> localizedQuery = issuesQuery
+                        .Include(issue => issue.Series)
+                        .ThenInclude(series => series.Language)
+                        .Where(issue => issue.Series.Language.Code == "en" || issue.Series.Language.Code == "fr");
+
+                issues = await localizedQuery
+                .OrderBy(i => i.Created)
+                .Take(100).ToListAsync(cancellationToken);
+
+                _logger.LogInformation("localized SearchIssues query executed and returned {IssueCount} issues.", issues.Count);
+
+            }
 
             List<IssueDto> results = issues
                 .Select(issue => new
