@@ -197,6 +197,8 @@ namespace Application.Services.ComicService
             string characters = JoinDistinct(issue.GcdStories.Select(story => story.Characters));
             string storyArc = JoinDistinct(issue.GcdStories.Select(story => story.Feature));
             string summaryFromStories = JoinDistinct(issue.GcdStories.Select(story => story.Synopsis));
+            string web = issue.Series?.Publisher?.Url ?? issue.IndiciaPublisher?.Url ?? string.Empty;
+            string gcdWeb = $"https://www.comics.org/issue/{issue.Id}/";
 
             ComicInfo comicInfo = new ComicInfo
             {
@@ -223,7 +225,7 @@ namespace Application.Services.ComicService
                 Publisher = issue.IndiciaPublisher?.Name ?? issue.Series?.Publisher?.Name ?? string.Empty,
                 Imprint = issue.IndiciaPublisher?.Name ?? string.Empty,
                 Genre = genre,
-                Web = issue.Series?.Publisher?.Url ?? issue.IndiciaPublisher?.Url ?? string.Empty,
+                Web = JoinDistinct(new[] { gcdWeb, web }),
                 PageCount = pageCount,
                 LanguageISO = issue.Series?.Language?.Code ?? string.Empty,
                 Format = issue.Series?.Format ?? issue.Series?.PublishingFormat ?? string.Empty,
