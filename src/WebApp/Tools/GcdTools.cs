@@ -4,6 +4,7 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using Domain.DTO;
 using Application.Issues.Queries.SearchIssuesQuery;
+using Application.Series.Queries.SearchSeriesQuery;
 
 namespace WebApp.Tools
 {
@@ -38,6 +39,29 @@ namespace WebApp.Tools
             });
 
             return JsonSerializer.Serialize(simplifiedIssues);
+        }
+
+        [McpServerTool]
+        [Description("Searches for comic book series based on a search text.")]
+        public async Task<string> SearchSeries([Description("The search text to find comic book series")] string searchText = "")
+        {
+            SearchSeriesQuery query = new SearchSeriesQuery(searchText);
+            List<SeriesDto> series = await _mediator.Send(query);
+
+            if (series.Count == 0)
+            {
+                return "No series found.";
+            }
+
+            var simplifiedSeries = series.Select(s => new
+            {
+                s.Id,
+                s.Name,
+                s.YearBegan,
+                s.IssueCount
+            });
+
+            return JsonSerializer.Serialize(simplifiedSeries);
         }
     }
 }
