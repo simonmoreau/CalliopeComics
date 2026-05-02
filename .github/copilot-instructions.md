@@ -5,7 +5,7 @@ applyTo: '**/*.cs'
 
 ## Project Overview
 
-CalliopeComics is an ASP.NET API for automating services.
+CalliopeComics is an ASP.NET MCP Server application designed to manage comic book collections, including a comic book search engine and comic book files (crb and cbz) manipulations.
 
 - **Backend:** ASP.NET REST API with a PostgreSQL database (`src\WebApp\WebApp.csproj`)
 - **Testing:** Unit and integration tests are located in the `test/` directory
@@ -16,11 +16,11 @@ CalliopeComics is an ASP.NET API for automating services.
 - Don't write comments, except for all public APIs.
 - Use XML doc comments for all public APIs, including `<example>` and `<code>` tags where applicable.
 - Always use the type instead of `var`.
-- Do not use static for private methods in handlers.
+- Do not use static for private methods.
 
 ## General Instructions
 - Make only high confidence suggestions when reviewing code changes.
-- Write code with good maintainability practices, including comments on design decisions.
+- Write code with good maintainability practices.
 - Handle edge cases and write clear exception handling.
 - For libraries or external dependencies, mention their usage and purpose in comments.
 - When the project structure or practices change, update this file to keep Copilot suggestions relevant.
