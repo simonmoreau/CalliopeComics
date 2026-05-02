@@ -1,5 +1,6 @@
 using Application.Clients.Queries.GetClientsQuery;
 using Application.Issues.Queries.SearchIssuesQuery;
+using Application.Series.Queries.SearchSeriesQuery;
 using Domain.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +23,14 @@ namespace WebApp.Controllers
         {
             List<IssueDto> issues = await SendToMediator(new SearchIssuesQuery(searchTerm));
             return issues;
+        }
+
+
+        [HttpGet("series")]
+        public async Task<List<SeriesDto>> GetSeries([FromQuery] string searchTerm)
+        {
+            List<SeriesDto> series = await SendToMediator(new SearchSeriesQuery(searchTerm));
+            return series;
         }
     }
 }

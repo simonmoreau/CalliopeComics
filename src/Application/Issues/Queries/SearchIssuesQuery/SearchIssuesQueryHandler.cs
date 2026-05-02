@@ -108,7 +108,7 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             return results;
         }
 
-        private static string NormalizeSearchTerm(string term)
+        private string NormalizeSearchTerm(string term)
         {
             if (int.TryParse(term, out int number))
             {
@@ -186,7 +186,7 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             return score;
         }
 
-        private static string BuildIssueSearchText(GcdIssue issue)
+        private string BuildIssueSearchText(GcdIssue issue)
         {
             return string.Join(' ',
                 issue.Number,
@@ -214,7 +214,7 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             );
         }
 
-        private static string BuildSeriesSearchText(GcdSeries series)
+        private string BuildSeriesSearchText(GcdSeries series)
         {
             return string.Join(' ',
                 series.Name,
@@ -234,7 +234,7 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             );
         }
 
-        private static string BuildPublisherSearchText(GcdPublisher publisher)
+        private string BuildPublisherSearchText(GcdPublisher publisher)
         {
             return string.Join(' ',
                 publisher.Name,
@@ -247,12 +247,12 @@ namespace Application.Issues.Queries.SearchIssuesQuery
             );
         }
 
-        private static bool ContainsIgnoreCase(string? source, string term)
+        private bool ContainsIgnoreCase(string? source, string term)
         {
             return source?.Contains(term, StringComparison.OrdinalIgnoreCase) is true;
         }
 
-        private static bool RegexMatch(string source, string pattern)
+        private bool RegexMatch(string source, string pattern)
         {
             try
             {

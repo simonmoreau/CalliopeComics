@@ -12,10 +12,11 @@ CalliopeComics is an ASP.NET API for automating services.
 
 ## C# Instructions
 - Always use the latest C# features (currently C# 13).
-- Write clear, concise and expressive names for  function and class, including their purpose and usage.
+- Write clear, concise, and expressive names for functions and classes, including their purpose and usage.
 - Don't write comments, except for all public APIs.
 - Use XML doc comments for all public APIs, including `<example>` and `<code>` tags where applicable.
-- Always use the type insted of `var`.
+- Always use the type instead of `var`.
+- Do not use static for private methods in handlers.
 
 ## General Instructions
 - Make only high confidence suggestions when reviewing code changes.
@@ -27,10 +28,10 @@ CalliopeComics is an ASP.NET API for automating services.
 
 ## Project Structure
 This solution uses Clean Architecture with separate projects for Domain, Application, Infrastructure, REST API.
-- `src\WebApp\WebApp.csproj` � ASP.NET Core backend REST API.
-- `src\Domain\Domain.csproj` � Application layer (business logic, services).
-- `src\Infrastructure\Infrastructure.csproj` � Infrastructure layer (data access, external services).
-- `test\Application.Test\Application.Test.csproj` � xUnit-based test project for the back enCalliopeComicsOCServer.Application
+- `src\WebApp\WebApp.csproj` – ASP.NET Core backend REST API.
+- `src\Domain\Domain.csproj` – Application layer (business logic, services).
+- `src\Infrastructure\Infrastructure.csproj` – Infrastructure layer (data access, external services).
+- `test\Application.Test\Application.Test.csproj` – xUnit-based test project for the CalliopeComics.Application.
 
 ## Naming Conventions
 
@@ -55,7 +56,7 @@ This solution uses Clean Architecture with separate projects for Domain, Applica
 
 ## Logging and Monitoring
 
-- Guide the implementation of structured logging using Illoging
+- Guide the implementation of structured logging using Illogging.
 - Explain the logging levels and when to use each.
 - Demonstrate integration with Application Insights for telemetry collection.
 - Show how to implement custom telemetry and correlation IDs for request tracking.
