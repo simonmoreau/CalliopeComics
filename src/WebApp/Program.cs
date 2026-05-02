@@ -5,6 +5,7 @@ using Infrastructure;
 using MediatR.Pipeline;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using WebApp.Tools;
 
 namespace WebApp
 {
@@ -58,6 +59,18 @@ namespace WebApp
             builder.Services.AddWindowsService();
             builder.Services.AddProblemDetails();
 
+            // Add the MCP services: the transport to use (http) and the tools to register.
+            builder.Services
+                .AddMcpServer()
+                .WithHttpTransport(options =>
+                {
+                    // Stateless mode is recommended for servers that don't need
+                    // server-to-client requests like sampling or elicitation.
+                    // See https://csharp.sdk.modelcontextprotocol.io/concepts/transports/transports.html for details.
+                    options.Stateless = true;
+                })
+                .WithTools<GcdTools>();
+
             WebApplication app = builder.Build();
 
             bool shouldMigrate = Array.Exists(args, argument => string.Equals(argument, "--migrate", StringComparison.OrdinalIgnoreCase));
@@ -109,6 +122,7 @@ namespace WebApp
                 RequestPath = "/files",
             });
 
+            app.MapMcp();
             app.UseHttpsRedirection();
 
 

@@ -37,6 +37,7 @@ namespace Application.Services.ComicService
         {
             _logger.LogInformation("Comics processor background service started.");
 
+            return;
             try
             {
                 string storagePath = _applicationSettings.StoragePath;

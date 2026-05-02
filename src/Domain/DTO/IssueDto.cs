@@ -49,6 +49,7 @@ namespace Domain.DTO
             IndiciaPrinterNotPrinted = gcdIssue.IndiciaPrinterNotPrinted;
             VariantCoverStatus = gcdIssue.VariantCoverStatus;
             IndiciaPrinterSourcedBy = gcdIssue.IndiciaPrinterSourcedBy;
+            SeriesName = gcdIssue.Series?.Name ?? string.Empty;
         }
 
         public int Id { get; set; }
@@ -57,6 +58,7 @@ namespace Domain.DTO
         public int NoVolume { get; set; }
         public int DisplayVolumeWithNumber { get; set; }
         public int SeriesId { get; set; }
+        public string SeriesName { get; set; }
         public int? IndiciaPublisherId { get; set; }
         public int IndiciaPubNotPrinted { get; set; }
         public int? BrandId { get; set; }
