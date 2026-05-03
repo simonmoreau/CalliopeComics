@@ -193,6 +193,12 @@ namespace Application.Services.ComicService
             string summaryFromStories = JoinDistinct(issue.GcdStories.Select(story => story.Synopsis));
             string web = issue.Series?.Publisher?.Url ?? issue.IndiciaPublisher?.Url ?? string.Empty;
             string gcdWeb = $"https://www.comics.org/issue/{issue.Id}/";
+            string issueNuber = issue.Number;
+            
+            if (issue.Number.Contains("nn"))
+            {
+                issueNuber = "1";
+            }
 
             ComicInfo comicInfo = new ComicInfo
             {
