@@ -1,20 +1,24 @@
-﻿using System.Text.Json;
+﻿using Application.Issues.Queries.SearchIssuesQuery;
+using Application.Series.Queries.SearchSeriesQuery;
+using Application.Services.GrandComicDatabase;
+using Domain.DTO;
 using MediatR;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
-using Domain.DTO;
-using Application.Issues.Queries.SearchIssuesQuery;
-using Application.Series.Queries.SearchSeriesQuery;
+using System.Text.Json;
 
 namespace WebApp.Tools
 {
     internal class GcdTools
     {
         private readonly IMediator _mediator;
+        private readonly IGrandComicDatabaseClient _grandComicDatabaseClient;
 
-        public GcdTools(IMediator mediator)
+        public GcdTools(IMediator mediator, IGrandComicDatabaseClient grandComicDatabaseClient)
         {
             _mediator = mediator;
+            _grandComicDatabaseClient = grandComicDatabaseClient;
         }
 
         [McpServerTool]
@@ -63,5 +67,18 @@ namespace WebApp.Tools
 
             return JsonSerializer.Serialize(simplifiedSeries);
         }
+
+        [McpServerTool]
+        [Description("Get the offical cover of a comic book issue by its ID.")]
+        public async Task<ImageContentBlock> GetIssueCover([Description("The ID of the comic book issue")] int issueId)
+        {
+            // Implementation for getting the issue cover by ID
+            CancellationToken cancellationToken = new CancellationToken();
+            Issue issue = await _grandComicDatabaseClient.GetIssue(issueId, cancellationToken);
+            byte[] image = await _grandComicDatabaseClient.GetIssueCover(issue, cancellationToken);
+
+            return ImageContentBlock.FromBytes(image, "image/png");
+        }
+
     }
 }
