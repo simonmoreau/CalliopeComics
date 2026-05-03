@@ -9,6 +9,8 @@ using Xunit.Abstractions;
 using Domain.DTO;
 using Application.Settings.Queries;
 using Application.Services.Gemini;
+using System.Net.Http;
+using Application.Services.GrandComicDatabase;
 
 namespace Application.Test
 {
@@ -19,7 +21,7 @@ namespace Application.Test
         {
         }
 
-        [Fact]
+        [Fact(Skip = "Requires external service")]
         public async Task GemeniImageTest()
         {
             // Arrange
@@ -35,6 +37,28 @@ namespace Application.Test
             string imageFilePath = @"C:\Users\smoreau\Downloads\Avengers_ANN_1998.png";
 
             string result = await geminiClient.AnalyseImageAsync(imageFilePath, imageFilePath);
+            // Assert  
+            Assert.NotNull(result);
+        }
+
+        [Fact(Skip = "Requires external service")]
+        public async Task GcdImageTest()
+        {
+            // Arrange
+            ApplicationSettings appSettings = new ApplicationSettings
+            {
+                StoragePath = "C:\\CalliopeComicsServer\\Storage"
+            };
+
+            IOptions<ApplicationSettings> options = Options.Create(appSettings);
+            HttpClient httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri("https://www.comics.org/api/");
+
+            GrandComicDatabaseClient gcdClient = new GrandComicDatabaseClient(httpClient, new Services.RequestSender(options));
+
+            string imageFilePath = @"C:\Users\smoreau\Downloads\Avengers_ANN_1998.png";
+
+            string result = await gcdClient.AnalyseImageAsync(imageFilePath, imageFilePath);
             // Assert  
             Assert.NotNull(result);
         }
