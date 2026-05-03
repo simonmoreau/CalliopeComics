@@ -2,6 +2,7 @@
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
+using SharpCompress.Readers;
 using System;
 using System.Globalization;
 using System.IO.Compression;
@@ -41,44 +42,37 @@ namespace Application.Services.ComicService
             Directory.CreateDirectory(extractionDirectoryPath);
             Directory.CreateDirectory(outputDirectoryPath);
 
+            bool success = false;
             try
             {
-                if (normalizedExtension is ".cbz" or ".crz")
+                using FileStream archiveStream = File.OpenRead(comicsPath);
+                using IReader archive = ReaderFactory.Open(archiveStream);
+
+                while (archive.MoveToNextEntry())
                 {
-                    ZipFile.ExtractToDirectory(comicsPath, extractionDirectoryPath);
-                }
-                else
-                {
-                    using RarArchive archive = RarArchive.Open(comicsPath);
-                    foreach (IArchiveEntry entry in archive.Entries.Where(archiveEntry => !archiveEntry.IsDirectory))
+                    IEntry entry = archive.Entry;
+                    if (entry == null) continue;
+                    if (entry.IsDirectory) continue;
+                    if (entry.Key == null) continue;
+
+                    if (!IsSupportedImageFile(entry.Key)) continue;
+
+                    // Extract to directory (preserves path structure)
+                    archive.WriteEntryToDirectory(extractionDirectoryPath, new ExtractionOptions()
                     {
-                        entry.WriteToDirectory(extractionDirectoryPath, new ExtractionOptions
-                        {
-                            ExtractFullPath = true,
-                            Overwrite = true
-                        });
-                    }
+                        ExtractFullPath = true,  // Recreates subdirectories
+                        Overwrite = true         // Overwrite if exists
+                    });
+                    string extractedFilePath = Path.Combine(extractionDirectoryPath, entry.Key);
+                    success = true;
+                    return extractedFilePath;
                 }
 
-                string[] imageFiles = Directory.EnumerateFiles(extractionDirectoryPath, "*", SearchOption.AllDirectories)
-                    .Where(IsSupportedImageFile)
-                    .OrderBy(filePath => Path.GetRelativePath(extractionDirectoryPath, filePath), StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
-
-                if (imageFiles.Length == 0)
-                {
-                    throw new InvalidOperationException("No image file was found in the comic archive.");
-                }
-
-                string firstImagePath = imageFiles[0];
-                string destinationImagePath = Path.Combine(outputDirectoryPath, $"first_page{Path.GetExtension(firstImagePath)}");
-                File.Copy(firstImagePath, destinationImagePath, true);
-
-                return destinationImagePath;
+                throw new InvalidOperationException("No image file was found in the comic archive.");
             }
             finally
             {
-                if (Directory.Exists(extractionDirectoryPath))
+                if (!success && Directory.Exists(extractionDirectoryPath))
                 {
                     Directory.Delete(extractionDirectoryPath, true);
                 }

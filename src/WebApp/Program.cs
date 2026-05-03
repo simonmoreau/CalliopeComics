@@ -69,7 +69,8 @@ namespace WebApp
                     // See https://csharp.sdk.modelcontextprotocol.io/concepts/transports/transports.html for details.
                     options.Stateless = true;
                 })
-                .WithTools<GcdTools>();
+                .WithTools<GcdTools>()
+                .WithTools<ComicTools>();
 
             WebApplication app = builder.Build();
 

@@ -18,7 +18,7 @@ namespace WebApp.Tools
         }
 
         [McpServerTool]
-        [Description("Searches for comic book issues based on a search text.")]
+        [Description("Searches for comic book issues based on a search text. The search text can contains a issue number for a specific search.")]
         public async Task<string> SearchComicIssues([Description("The search text to find comic book issues")] string searchText = "")
         {
             SearchIssuesQuery query = new SearchIssuesQuery(searchText);
@@ -42,7 +42,7 @@ namespace WebApp.Tools
         }
 
         [McpServerTool]
-        [Description("Searches for comic book series based on a search text.")]
+        [Description("Searches for comic book series based on a search text (Series name, publisher and publication year).")]
         public async Task<string> SearchSeries([Description("The search text to find comic book series")] string searchText = "")
         {
             SearchSeriesQuery query = new SearchSeriesQuery(searchText);
