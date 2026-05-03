@@ -1,4 +1,5 @@
-﻿using Application.Issues.Queries.SearchIssuesQuery;
+﻿using Application.Issues.Queries.GetIssuesFromSeries;
+using Application.Issues.Queries.SearchIssuesQuery;
 using Application.Series.Queries.SearchSeriesQuery;
 using Application.Services.GrandComicDatabase;
 using Domain.DTO;
@@ -66,6 +67,31 @@ namespace WebApp.Tools
             });
 
             return JsonSerializer.Serialize(simplifiedSeries);
+        }
+
+        [McpServerTool]
+        [Description("Get all the issues of a series by its ID.")]
+        public async Task<string> GetIssuesFromSeries([Description("The ID of the series")] int seriesId)
+        {
+            GetIssuesFromSeriesQuery query = new GetIssuesFromSeriesQuery(seriesId);
+            List<IssueDto> issues = await _mediator.Send(query);
+
+            if (issues.Count == 0)
+            {
+                return "No issues found for this series.";
+            }
+
+            var simplifiedIssues = issues.Select(i => new
+            {
+                i.Id,
+                i.SeriesName,
+                i.Title,
+                i.Number,
+                i.PublicationDate,
+                i.Notes
+            });
+
+            return JsonSerializer.Serialize(simplifiedIssues);
         }
 
         [McpServerTool]
