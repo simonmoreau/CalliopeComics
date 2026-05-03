@@ -40,7 +40,7 @@ namespace Application.Interfaces
             })
              .ConfigurePrimaryHttpMessageHandler(handler => new HttpClientHandler()
              {
-                 AutomaticDecompression = System.Net.DecompressionMethods.GZip
+                 AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
              });
 
             return services;

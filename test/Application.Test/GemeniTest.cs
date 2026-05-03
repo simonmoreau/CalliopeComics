@@ -42,7 +42,7 @@ namespace Application.Test
         }
 
         [Fact(Skip = "Requires external service")]
-        public async Task GcdImageTest()
+        public async Task GcdIssueTest()
         {
             // Arrange
             ApplicationSettings appSettings = new ApplicationSettings
@@ -51,16 +51,20 @@ namespace Application.Test
             };
 
             IOptions<ApplicationSettings> options = Options.Create(appSettings);
-            HttpClient httpClient = new HttpClient();
+            var handler = new HttpClientHandler()
+            {
+                AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
+            };
+
+            HttpClient httpClient = new HttpClient(handler);
             httpClient.BaseAddress = new Uri("https://www.comics.org/api/");
 
             GrandComicDatabaseClient gcdClient = new GrandComicDatabaseClient(httpClient, new Services.RequestSender(options));
 
-            string imageFilePath = @"C:\Users\smoreau\Downloads\Avengers_ANN_1998.png";
-
-            string result = await gcdClient.AnalyseImageAsync(imageFilePath, imageFilePath);
+            Issue issue = gcdClient.GetIssue(21279, CancellationToken.None).Result;
+            // string result = await gcdClient.AnalyseImageAsync(imageFilePath, imageFilePath);
             // Assert  
-            Assert.NotNull(result);
+            Assert.NotNull(issue);
         }
     }
 }
