@@ -34,7 +34,7 @@ namespace Application.Services.GrandComicDatabase
         {
             if (string.IsNullOrEmpty(issue.Cover))
             {
-                throw new ArgumentException("Issue cover URL is null or empty", nameof(issue));
+                return new byte[0];
             }
 
             return await _httpClient.GetByteArrayAsync(issue.Cover, cancellationToken);
