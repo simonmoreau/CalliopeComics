@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "CLI": {
+      "commandName": "Project"
+    },
+    "WriteComic": {
+      "commandName": "Project",
+      "commandLineArgs": "ComicInfo -id 34529 -p \"C:\\Users\\smoreau\\Desktop\\BD\\BD Library\\0_Day\\Avengers\\Avengers\\Avengers197.cbz\""
+    }
+  }
+}
