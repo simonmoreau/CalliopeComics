@@ -103,7 +103,18 @@ namespace WebApp.Tools
             Issue issue = await _grandComicDatabaseClient.GetIssue(issueId, cancellationToken);
             byte[] image = await _grandComicDatabaseClient.GetIssueCover(issue, cancellationToken);
 
-            return ImageContentBlock.FromBytes(image, "image/png");
+            return ImageContentBlock.FromBytes(image, GetMimeType(image));
+        }
+
+        private string GetMimeType(byte[] buffer)
+        {
+            if (buffer.Length < 8) return "application/octet-stream";
+
+            if (buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4E && buffer[3] == 0x47) return "image/png";
+            if (buffer[0] == 0xFF && buffer[1] == 0xD8 && buffer[2] == 0xFF) return "image/jpeg";
+            if (buffer[0] == 0x47 && buffer[1] == 0x49 && buffer[2] == 0x46) return "image/gif";
+            
+            return "application/octet-stream";
         }
 
     }
