@@ -112,8 +112,7 @@ namespace Application.Services.ComicService
                         GcdIssue issue = await mediator.Send(detailsQuery, stoppingToken);
                         ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
 
-                        
-                        string savedArchivePath = _comicService.SaveComicInfo(comicInfo, archivePath);
+                        string savedArchivePath = await _comicService.SaveComicInfo(comicInfo, archivePath);
 
                         string copiedArchivePath = Path.Combine(processedStoragePath, Path.GetFileName(savedArchivePath));
 

@@ -79,7 +79,7 @@ namespace Application.Services.ComicService
             }
         }
 
-        public string SaveComicInfo(ComicInfo comicInfo, string comicsPath)
+        public async Task<string> SaveComicInfo(ComicInfo comicInfo, string comicsPath)
         {
             if (comicInfo is null)
             {
@@ -106,16 +106,20 @@ namespace Application.Services.ComicService
             string extractDirectoryPath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_extract_{Guid.NewGuid():N}");
             string xmlFilePath = Path.Combine(extractDirectoryPath, "ComicInfo.xml");
             string temporaryArchivePath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_archive_{Guid.NewGuid():N}.cbz");
-            string destinationArchivePath = isRarBasedArchive
-                ? Path.ChangeExtension(comicsPath, ".cbz")
-                : comicsPath;
 
             Directory.CreateDirectory(extractDirectoryPath);
+
+            XmlSerializer serializer = new XmlSerializer(typeof(ComicInfo));
+            using (FileStream xmlFileStream = new FileStream(xmlFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                serializer.Serialize(xmlFileStream, comicInfo);
+            }
 
             try
             {
                 if (isRarBasedArchive)
                 {
+                    throw new NotSupportedException("Saving ComicInfo to RAR-based archives is not supported due to limitations in the SharpCompress library. Please use a ZIP-based archive (e.g., .cbz) instead.");
                     using RarArchive archive = RarArchive.Open(comicsPath);
                     foreach (IArchiveEntry entry in archive.Entries.Where(archiveEntry => !archiveEntry.IsDirectory))
                     {
@@ -128,24 +132,15 @@ namespace Application.Services.ComicService
                 }
                 else
                 {
-                    ZipFile.ExtractToDirectory(comicsPath, extractDirectoryPath);
+                    using (ZipArchive archive = ZipFile.Open(comicsPath, ZipArchiveMode.Update))
+                    {
+                        archive.Entries.Where(entry => string.Equals(entry.FullName, "ComicInfo.xml", StringComparison.OrdinalIgnoreCase)).ToList()
+                            .ForEach(entry => entry.Delete());
+                        await archive.CreateEntryFromFileAsync(xmlFilePath, Path.GetFileName(xmlFilePath));
+                    }
                 }
 
-                XmlSerializer serializer = new XmlSerializer(typeof(ComicInfo));
-                using (FileStream xmlFileStream = new FileStream(xmlFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    serializer.Serialize(xmlFileStream, comicInfo);
-                }
-
-                ZipFile.CreateFromDirectory(extractDirectoryPath, temporaryArchivePath, CompressionLevel.Optimal, false);
-                File.Copy(temporaryArchivePath, destinationArchivePath, true);
-
-                if (isRarBasedArchive && !string.Equals(destinationArchivePath, comicsPath, StringComparison.OrdinalIgnoreCase) && File.Exists(comicsPath))
-                {
-                    File.Delete(comicsPath);
-                }
-
-                return destinationArchivePath;
+                return comicsPath;
             }
             finally
             {

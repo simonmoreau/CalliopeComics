@@ -70,7 +70,7 @@ namespace WebApp.Tools
             GcdIssue issue = await _mediator.Send(detailsQuery, stoppingToken);
             ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
 
-            return _comicService.SaveComicInfo(comicInfo, comicsPath);
+            return await _comicService.SaveComicInfo(comicInfo, comicsPath);
         }
     }
 }
