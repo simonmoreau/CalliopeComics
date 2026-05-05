@@ -9,7 +9,7 @@ namespace CLI
 {
     [Command(Name = "Calliope", OptionsComparison = System.StringComparison.InvariantCultureIgnoreCase)]
     [VersionOptionFromMember("--version", MemberName = nameof(GetVersion))]
-    [Subcommand(typeof(ComicInfoCmd))]
+    [Subcommand(typeof(ComicInfoCmd), typeof(SeriesCmd), typeof(IssueCmd))]
     internal class ComicCmd
     {
         private readonly IConsole _console;
