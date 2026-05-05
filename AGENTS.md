@@ -5,13 +5,15 @@
   - `src/Domain`: Domain entities and logic
   - `src/Application`: Application services and business logic
   - `src/Infrastructure`: Data access and external services
-  - `src/WebApp`: ASP.NET Core REST API entry point
+  - `src/WebApp`: ASP.NET Core REST API entry point and MCP tools host
+  - `src/CLI`: Command Line Interface for comic management
 
 ## Development Setup
-- **Local Development**: Run from `src/WebApp` directory using `dotnet run`
+- **Local Development (Web)**: Run from `src/WebApp` directory using `dotnet run`
   - Profiles from `launchSettings.json`:
     - HTTP: `http://localhost:5095` (swagger UI launches)
     - HTTPS: `https://localhost:7296`
+- **Local Development (CLI)**: Run from `src/CLI` directory using `dotnet run -- [args]`
 - **Docker Development**: `docker-compose -f docker/docker-compose.yml up --build`
   - App: `http://localhost:5678`
   - Postgres: `localhost:5432`
@@ -30,5 +32,4 @@
 - **Migrations**: App auto-runs `dotnet WebApp.dll --migrate` on startup in Docker
 
 ## Coding Standards
-- See `.github/copilot-instructions.md` for C# conventions, formatting, and project-specific guidelines</content>
-<parameter name="filePath">/mnt/c/Users/smoreau/Github/Divers/CalliopeComics/AGENTS.md
+- See `.github/copilot-instructions.md` for C# conventions, formatting, and project-specific guidelines
