@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Domain.Entities;
 
 namespace Domain.DTO
@@ -46,6 +48,7 @@ namespace Domain.DTO
             HasAboutComics = gcdSeries.HasAboutComics;
             HasIndiciaPrinter = gcdSeries.HasIndiciaPrinter;
             HasPublisherCodeNumber = gcdSeries.HasPublisherCodeNumber;
+            Issues = gcdSeries.GcdIssues?.Select(i => new IssueDto(i)).ToList() ?? new List<IssueDto>();
         }
 
         public int Id { get; set; }
@@ -87,5 +90,6 @@ namespace Domain.DTO
         public int HasAboutComics { get; set; }
         public int HasIndiciaPrinter { get; set; }
         public int HasPublisherCodeNumber { get; set; }
+        public List<IssueDto> Issues { get; set; }
     }
 }
