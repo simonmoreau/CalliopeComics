@@ -102,7 +102,12 @@ namespace Application.Services.ComicService
                 throw new NotSupportedException($"Unsupported comic archive extension '{extension}'.");
             }
 
-            bool isRarBasedArchive = extension is ".cbr" or ".crb";
+            if (!ArchiveFactory.IsArchive(comicsPath, out ArchiveType? detectedType) || detectedType is null)
+            {
+                throw new InvalidOperationException("Could not detect archive type from file content.");
+            }
+
+            bool isRarBasedArchive = detectedType == ArchiveType.Rar;
             string extractDirectoryPath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_extract_{Guid.NewGuid():N}");
             string xmlFilePath = Path.Combine(extractDirectoryPath, "ComicInfo.xml");
             string temporaryArchivePath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_archive_{Guid.NewGuid():N}.cbz");
@@ -115,11 +120,11 @@ namespace Application.Services.ComicService
                 serializer.Serialize(xmlFileStream, comicInfo);
             }
 
+            string resultPath = comicsPath;
             try
             {
                 if (isRarBasedArchive)
                 {
-                    throw new NotSupportedException("Saving ComicInfo to RAR-based archives is not supported due to limitations in the SharpCompress library. Please use a ZIP-based archive (e.g., .cbz) instead.");
                     using RarArchive archive = RarArchive.Open(comicsPath);
                     foreach (IArchiveEntry entry in archive.Entries.Where(archiveEntry => !archiveEntry.IsDirectory))
                     {
@@ -129,6 +134,10 @@ namespace Application.Services.ComicService
                             Overwrite = true
                         });
                     }
+
+                    ZipFile.CreateFromDirectory(extractDirectoryPath, temporaryArchivePath);
+                    resultPath = Path.ChangeExtension(comicsPath, ".cbz");
+                    File.Move(temporaryArchivePath, resultPath,true);
                 }
                 else
                 {
@@ -140,7 +149,7 @@ namespace Application.Services.ComicService
                     }
                 }
 
-                return comicsPath;
+                return resultPath;
             }
             finally
             {
