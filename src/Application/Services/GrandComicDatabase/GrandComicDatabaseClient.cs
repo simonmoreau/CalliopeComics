@@ -37,7 +37,23 @@ namespace Application.Services.GrandComicDatabase
                 return new byte[0];
             }
 
-            return await _httpClient.GetByteArrayAsync(issue.Cover, cancellationToken);
+            try
+            {
+                using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, issue.Cover);
+                request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
+                request.Headers.Accept.ParseAdd("image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
+                request.Headers.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
+                request.Headers.Referrer = new Uri("https://www.comics.org/");
+                request.Headers.AcceptEncoding.ParseAdd("gzip, deflate");
+
+                using HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                return new byte[0];
+            }
         }
     }
 }

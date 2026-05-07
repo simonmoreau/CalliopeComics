@@ -103,6 +103,13 @@ namespace WebApp.Tools
             Issue issue = await _grandComicDatabaseClient.GetIssue(issueId, cancellationToken);
             byte[] image = await _grandComicDatabaseClient.GetIssueCover(issue, cancellationToken);
 
+            if (image.Length == 0)
+            {
+                throw new InvalidOperationException(
+                    $"The cover image for issue #{issue.Number} of {issue.SeriesName} could not be fetched. " +
+                    "The GCD image server blocks automated requests.");
+            }
+
             return ImageContentBlock.FromBytes(image, GetMimeType(image));
         }
 
