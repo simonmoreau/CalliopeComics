@@ -1,12 +1,16 @@
-﻿using Domain.Entities;
+﻿using Application.Services.GrandComicDatabase;
+using Domain.Entities;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Serialization;
 
 namespace Application.Services.ComicService
@@ -192,13 +196,15 @@ namespace Application.Services.ComicService
             string coverArtist = GetCredits(issue, "painting");
             string editor = GetCredits(issue, "editing");
             string genre = JoinDistinct(issue.GcdStories.Select(story => story.Genre));
-            string characters = JoinDistinct(issue.GcdStories.Select(story => story.Characters));
+            string characters = GetCaracters(issue);
+            string teams = GetTeams(issue);
             string storyArc = JoinDistinct(issue.GcdStories.Select(story => story.Feature));
             string summaryFromStories = JoinDistinct(issue.GcdStories.Select(story => story.Synopsis));
             string web = issue.Series?.Publisher?.Url ?? issue.IndiciaPublisher?.Url ?? string.Empty;
             string gcdWeb = $"https://www.comics.org/issue/{issue.Id}/";
             string issueNuber = issue.Number;
             
+
             if (issue.Number.Contains("nn"))
             {
                 issueNuber = "1";
@@ -208,7 +214,7 @@ namespace Application.Services.ComicService
             {
                 Title = issue.NoTitle == 0 ? issue.Title : string.Empty,
                 Series = issue.Series?.Name ?? string.Empty,
-                Number = issue.Number,
+                Number = issueNuber,
                 Count = seriesCount,
                 Volume = volume,
                 AlternateSeries = issue.VariantOf?.Series?.Name ?? string.Empty,
@@ -236,7 +242,7 @@ namespace Application.Services.ComicService
                 BlackAndWhite = GetBlackAndWhite(issue),
                 Manga = GetManga(issue, genre),
                 Characters = characters,
-                Teams = string.Empty,
+                Teams = teams,
                 Locations = string.Empty,
                 ScanInformation = issue.IndiciaPrinterSourcedBy,
                 StoryArc = storyArc,
@@ -245,7 +251,7 @@ namespace Application.Services.ComicService
                 Pages = Array.Empty<ComicPageInfo>(),
                 CommunityRating = 0,
                 CommunityRatingSpecified = false,
-                MainCharacterOrTeam = GetMainCharacterOrTeam(characters, string.Empty),
+                MainCharacterOrTeam = GetMainCharacterOrTeam(issue, teams),
                 Review = string.Empty
             };
 
@@ -254,8 +260,6 @@ namespace Application.Services.ComicService
 
         private string GetCredits(GcdIssue issue, params string[] acceptedTypes)
         {
-            var test = issue.GcdStories.SelectMany(story => story.GcdStoryCredits).ToList().Select(c => c.CreditType.Name).ToList();
-
             IEnumerable<string> storyCredits = issue.GcdStories.SelectMany(story => story.GcdStoryCredits)
                 .Where(credit => credit.CreditType is not null && acceptedTypes.Any(acceptedType => credit.CreditType.Name.Contains(acceptedType, StringComparison.OrdinalIgnoreCase)))
                 .Select(GetStoryCreditName);
@@ -266,6 +270,53 @@ namespace Application.Services.ComicService
 
             return JoinDistinct(storyCredits.Concat(issueCredits).Distinct());
         }
+
+        private string GetCaracters(GcdIssue issue)
+        {
+            var names = new List<string>();
+
+            if (issue?.GcdStories == null) return string.Empty;
+
+            foreach (GcdStory story in issue.GcdStories)
+            {
+                if (story?.GcdStoryCharacters == null) continue;
+                foreach (GcdStoryCharacter? storyCharacter in story.GcdStoryCharacters)
+                {
+                    // Primary: character name
+                    var name = storyCharacter?.Character?.Name;
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        names.Add(name);
+                    }
+                }
+            }
+
+            return JoinDistinct(names);
+        }
+
+        private string GetTeams(GcdIssue issue)
+        {
+            var names = new List<string>();
+
+            if (issue?.GcdStories == null) return string.Empty;
+
+            foreach (GcdStory story in issue.GcdStories)
+            {
+                if (story?.GcdGroupCharacters == null) continue;
+                foreach (GcdGroupCharacter? groupCharacter in story.GcdGroupCharacters)
+                {
+                    // Primary: character name
+                    var name = groupCharacter?.GroupName?.Name;
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        names.Add(name);
+                    }
+                }
+            }
+
+            return JoinDistinct(names);
+        }
+
 
         private string GetCreditName(GcdIssueCredit credit)
         {
@@ -446,7 +497,7 @@ namespace Application.Services.ComicService
             return new string(chars);
         }
 
-        private string GetMainCharacterOrTeam(string characters, string teams)
+        private string GetMainCharacterOrTeam(GcdIssue issue, string teams)
         {
             if (!string.IsNullOrWhiteSpace(teams))
             {
@@ -457,16 +508,24 @@ namespace Application.Services.ComicService
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(characters))
+            List<string> names = new List<string>();
+
+            foreach (GcdStory story in issue.GcdStories)
             {
-                string[] characterValues = characters.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                if (characterValues.Length > 0)
+                if (story?.GcdStoryCharacters == null) continue;
+                foreach (GcdStoryCharacter? storyCharacter in story.GcdStoryCharacters)
                 {
-                    return characterValues[0];
+                    if (storyCharacter?.Role?.Name != "featured") continue;
+                    // Primary: character name
+                    var name = storyCharacter?.Character?.Name;
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        names.Add(name);
+                    }
                 }
             }
 
-            return string.Empty;
+            return JoinDistinct(names);
         }
     }
 }

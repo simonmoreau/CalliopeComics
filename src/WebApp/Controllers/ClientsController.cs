@@ -1,4 +1,6 @@
 using Application.Clients.Queries.GetClientsQuery;
+using Application.Issues.Queries.GetIssueDetailsQuery;
+using Domain.Entities;
 using Application.Issues.Queries.SearchIssuesQuery;
 using Application.Series.Queries.SearchSeriesQuery;
 using Domain.DTO;
@@ -11,6 +13,12 @@ namespace WebApp.Controllers
     [Route("api/clients")]
     public class ClientsController : BaseController
     {
+        [HttpGet("issues/{id}")]
+        public async Task<GcdIssue> GetIssueDetails([FromRoute] int id)
+        {
+            GcdIssue issue = await SendToMediator(new GetIssueDetailsQuery(id));
+            return issue;
+        }
         [HttpGet]
         public async Task<List<ClientDTO>> GetClients()
         {
