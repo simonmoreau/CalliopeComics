@@ -6,6 +6,7 @@ using Application.Series.Queries.SearchSeriesQuery;
 using Domain.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Application.Series.Queries.GetSerieDetailQuery;
 
 namespace WebApp.Controllers
 {
@@ -38,6 +39,13 @@ namespace WebApp.Controllers
         public async Task<List<SeriesDto>> GetSeries([FromQuery] string searchTerm)
         {
             List<SeriesDto> series = await SendToMediator(new SearchSeriesQuery(searchTerm));
+            return series;
+        }
+
+        [HttpGet("series/{id}")]
+        public async Task<SeriesDto> GetSeriesDetails([FromRoute] int id)
+        {
+            SeriesDto series = await SendToMediator(new GetSerieDetailQuery(id));
             return series;
         }
     }

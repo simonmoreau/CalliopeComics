@@ -48,7 +48,7 @@ namespace Domain.DTO
             HasAboutComics = gcdSeries.HasAboutComics;
             HasIndiciaPrinter = gcdSeries.HasIndiciaPrinter;
             HasPublisherCodeNumber = gcdSeries.HasPublisherCodeNumber;
-            Issues = gcdSeries.GcdIssues?.Select(i => new IssueDto(i)).ToList() ?? new List<IssueDto>();
+            Issues = gcdSeries.GcdIssues?.Select(i => new IssueSimplifiedDto(i)).ToList() ?? new List<IssueSimplifiedDto>();
         }
 
         public int Id { get; set; }
@@ -90,6 +90,6 @@ namespace Domain.DTO
         public int HasAboutComics { get; set; }
         public int HasIndiciaPrinter { get; set; }
         public int HasPublisherCodeNumber { get; set; }
-        public List<IssueDto> Issues { get; set; }
+        public List<IssueSimplifiedDto> Issues { get; set; }
     }
 }
