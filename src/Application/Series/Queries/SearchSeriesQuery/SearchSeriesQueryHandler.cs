@@ -48,6 +48,7 @@ namespace Application.Series.Queries.SearchSeriesQuery
                     EF.Functions.Like(series.Name, $"%{term}%") ||
                     EF.Functions.Like(series.SortName, $"%{term}%") ||
                     EF.Functions.Like(series.PublicationDates, $"%{term}%") ||
+                    EF.Functions.Like(series.YearBegan.ToString(), $"%{term}%") ||
                     EF.Functions.Like(series.TrackingNotes, $"%{term}%") ||
                     EF.Functions.Like(series.Notes, $"%{term}%") ||
                     EF.Functions.Like(series.Publisher.Name, $"%{term}%")
