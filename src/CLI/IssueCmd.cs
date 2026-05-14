@@ -1,13 +1,14 @@
+using Application.ComicInfo.Command.SetComicInfoDetailCommand;
+using Application.Issues.Queries.GetIssueDetailsQuery;
+using Application.Issues.Queries.SearchIssuesQuery;
+using Application.Services.ComicService;
+using Domain.DTO;
+using Domain.Entities;
 using McMaster.Extensions.CommandLineUtils;
 using MediatR;
-using Application.Issues.Queries.SearchIssuesQuery;
-using Application.Issues.Queries.GetIssueDetailsQuery;
-using Application.Services.ComicService;
-using Domain.Entities;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Domain.DTO;
 
 namespace CLI
 {
@@ -90,10 +91,15 @@ namespace CLI
 
             protected async Task<int> OnExecute()
             {
-                GcdIssue issue = await _mediator.Send(new GetIssueDetailsQuery(IssueId));
-                ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
-                await _comicService.SaveComicInfo(comicInfo, Path);
-                return 0;
+                try
+                {
+                    SetComicInfoDetailCommand setComicInfoDetailCommand = new SetComicInfoDetailCommand(IssueId, Path);
+                    return 0;
+                }
+                catch (Exception ex)
+                {
+                    return 1;
+                }
             }
         }
     }

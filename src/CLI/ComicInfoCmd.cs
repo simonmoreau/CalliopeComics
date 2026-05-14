@@ -1,4 +1,5 @@
-﻿using Application.Issues.Queries.GetIssueDetailsQuery;
+﻿using Application.ComicInfo.Command.SetComicInfoDetailCommand;
+using Application.Issues.Queries.GetIssueDetailsQuery;
 using Application.Services.ComicService;
 using Domain.Entities;
 using McMaster.Extensions.CommandLineUtils;
@@ -33,12 +34,7 @@ namespace CLI
         {
             try
             {
-                CancellationToken stoppingToken = new CancellationToken();
-                GetIssueDetailsQuery detailsQuery = new GetIssueDetailsQuery(IssueId);
-                GcdIssue issue = await _mediator.Send(detailsQuery, stoppingToken);
-                ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
-
-                _comicService.SaveComicInfo(comicInfo, Path);
+                SetComicInfoDetailCommand setComicInfoDetailCommand = new SetComicInfoDetailCommand(IssueId, Path);
                 return 0;
             }
             catch (Exception ex)

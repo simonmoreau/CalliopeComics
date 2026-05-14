@@ -7,6 +7,7 @@ using Domain.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Series.Queries.GetSerieDetailQuery;
+using Application.ComicInfo.Command.SetComicInfoDetailCommand;
 
 namespace WebApp.Controllers
 {
@@ -20,6 +21,14 @@ namespace WebApp.Controllers
             GcdIssue issue = await SendToMediator(new GetIssueDetailsQuery(id));
             return issue;
         }
+
+        [HttpGet("issues/{id}/write")]
+        public async Task WriteIssueDetails([FromRoute] int id, [FromQuery] string path)
+        {
+            await SendToMediator(new SetComicInfoDetailCommand(id, path));
+            return;
+        }
+
         [HttpGet]
         public async Task<List<ClientDTO>> GetClients()
         {

@@ -54,8 +54,6 @@ namespace Application.Issues.Queries.GetIssueDetailsQuery
                         .AsSplitQuery()
                         .FirstAsync();
 
-            ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
-
             return issue;
         }
     }

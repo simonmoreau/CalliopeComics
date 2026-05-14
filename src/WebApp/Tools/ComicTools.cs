@@ -1,3 +1,4 @@
+using Application.ComicInfo.Command.SetComicInfoDetailCommand;
 using Application.Common.Interfaces;
 using Application.Issues.Queries.GetIssueDetailsQuery;
 using Application.Services.ComicService;
@@ -66,11 +67,10 @@ namespace WebApp.Tools
         public async Task<string> WriteComicMetadataToArchive([Description("The ID of the comic issue")] int issueId, [Description("The path to the comic archive")] string comicsPath)
         {
             CancellationToken stoppingToken = new CancellationToken();
-            GetIssueDetailsQuery detailsQuery = new GetIssueDetailsQuery(issueId);
-            GcdIssue issue = await _mediator.Send(detailsQuery, stoppingToken);
-            ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
+            SetComicInfoDetailCommand setComicInfoDetailCommand = new SetComicInfoDetailCommand(issueId, comicsPath);
+            await _mediator.Send(setComicInfoDetailCommand, stoppingToken);
 
-            return await _comicService.SaveComicInfo(comicInfo, comicsPath);
+            return nameof(SetComicInfoDetailCommand);
         }
     }
 }

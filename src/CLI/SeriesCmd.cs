@@ -65,7 +65,7 @@ namespace CLI
                 _console.WriteLine("Issues:");
                 foreach (var issue in serie.Issues)
                 {
-                    _console.WriteLine($"- {issue.Id}: {issue.Number} ({issue.PublicationDate})");
+                    _console.WriteLine($"- {issue.Id}: {issue.Number}");
                 }
                 return 0;
             }
