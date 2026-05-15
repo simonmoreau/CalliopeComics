@@ -89,7 +89,7 @@ namespace Application.Services.ComicService
             return extension is ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp" or ".tif" or ".tiff";
         }
 
-        public ComicInfo CreateComicInfo(GcdIssue issue)
+        public ComicInfo CreateComicInfo(GcdIssue issue, string? seriesGroup = null)
         {
             if (issue is null)
             {
@@ -160,7 +160,7 @@ namespace Application.Services.ComicService
                 Locations = string.Empty,
                 ScanInformation = issue.IndiciaPrinterSourcedBy,
                 StoryArc = storyArc,
-                SeriesGroup = issue.Series?.PublicationType?.Name ?? string.Empty,
+                SeriesGroup = seriesGroup ?? string.Empty,
                 AgeRating = GetAgeRating(issue.Rating),
                 Pages = Array.Empty<ComicPageInfo>(),
                 CommunityRating = 0,

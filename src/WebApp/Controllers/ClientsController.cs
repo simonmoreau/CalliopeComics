@@ -23,9 +23,9 @@ namespace WebApp.Controllers
         }
 
         [HttpGet("issues/{id}/write")]
-        public async Task WriteIssueDetails([FromRoute] int id, [FromQuery] string path)
+        public async Task WriteIssueDetails([FromRoute] int id, [FromQuery] string path, [FromQuery] string? seriesGroup = null)
         {
-            await SendToMediator(new SetComicInfoDetailCommand(id, path));
+            await SendToMediator(new SetComicInfoDetailCommand(id, path, seriesGroup));
             return;
         }
 

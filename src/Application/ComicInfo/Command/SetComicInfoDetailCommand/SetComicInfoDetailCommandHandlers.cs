@@ -64,7 +64,7 @@ namespace Application.ComicInfo.Command.SetComicInfoDetailCommand
             }
 
             // Build updated ComicInfo from the issue data and persist into the archive
-            Application.Services.ComicService.ComicInfo comicInfo = _comicService.CreateComicInfo(issue);
+            Application.Services.ComicService.ComicInfo comicInfo = _comicService.CreateComicInfo(issue, request.SeriesGroup);
             await SaveComicInfo(comicInfo, request.ComicsPath);
 
             _logger.LogInformation("ComicInfo updated for Issue {IssueId} in {Path}", request.IssueId, request.ComicsPath);

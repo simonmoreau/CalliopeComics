@@ -9,11 +9,13 @@ namespace Application.ComicInfo.Command.SetComicInfoDetailCommand
     {
         public int IssueId { get; }
         public string ComicsPath { get; }
+        public string? SeriesGroup { get; }
 
-        public SetComicInfoDetailCommand(int issueId, string comicsPath)
+        public SetComicInfoDetailCommand(int issueId, string comicsPath, string? seriesGroup = null)
         {
             IssueId = issueId;
             ComicsPath = comicsPath;
+            SeriesGroup = seriesGroup;
         }
     }
 }
