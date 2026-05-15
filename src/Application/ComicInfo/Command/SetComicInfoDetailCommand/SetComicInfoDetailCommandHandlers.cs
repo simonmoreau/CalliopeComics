@@ -31,13 +31,32 @@ namespace Application.ComicInfo.Command.SetComicInfoDetailCommand
 
         public async Task<bool> Handle(SetComicInfoDetailCommand request, CancellationToken cancellationToken)
         {
-            GcdIssue? issue = await _context.GcdIssues
-                .Where(i => i.Id == request.IssueId)
-                .Include(i => i.Series)
-                .Include(i => i.IndiciaPublisher)
-                .Include(i => i.GcdStories)
-                    .ThenInclude(story => story.GcdStoryCredits)
-                .FirstOrDefaultAsync(cancellationToken);
+            GcdIssue? issue = await _context.GcdIssues.Where(i => i.Id == request.IssueId)
+                    .Include(issue => issue.Series)
+                            .ThenInclude(series => series.Publisher)
+                        .Include(issue => issue.Series)
+                            .ThenInclude(series => series.Language)
+                        .Include(issue => issue.Series)
+                            .ThenInclude(series => series.PublicationType)
+                        .Include(issue => issue.VariantOf)
+                            .ThenInclude(variantOf => variantOf.Series)
+                        .Include(issue => issue.IndiciaPublisher)
+                        .Include(issue => issue.GcdStories)
+                            .ThenInclude(s => s.GcdStoryCharacters).ThenInclude(caracter => caracter.Character)
+                         .Include(issue => issue.GcdStories)
+                            .ThenInclude(s => s.GcdStoryCharacters).ThenInclude(caracter => caracter.Role)
+                         .Include(issue => issue.GcdStories)
+                            .ThenInclude(s => s.GcdGroupCharacters).ThenInclude(group => group.GroupName)
+                        .Include(issue => issue.GcdStories)
+                            .ThenInclude(s => s.GcdStoryCredits).ThenInclude(credit => credit.CreditType)
+                        .Include(issue => issue.GcdStories)
+                            .ThenInclude(s => s.GcdStoryCredits).ThenInclude(credit => credit.Creator).ThenInclude(c => c.Creator)
+                        .Include(issue => issue.GcdIssueCredits)
+                            .ThenInclude(credit => credit.CreditType)
+                        .Include(issue => issue.GcdIssueCredits)
+                            .ThenInclude(credit => credit.Creator).ThenInclude(c => c.Creator)
+                        .AsSplitQuery()
+                        .FirstOrDefaultAsync(cancellationToken);
 
             if (issue == null)
             {
