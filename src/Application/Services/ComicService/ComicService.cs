@@ -99,7 +99,7 @@ namespace Application.Services.ComicService
             (int year, int month, int day) = GetDateParts(issue);
             int seriesCount = issue.Series is not null && issue.Series.IssueCount > 0 ? issue.Series.IssueCount : -1;
             int alternateCount = issue.VariantOf?.Series is not null && issue.VariantOf.Series.IssueCount > 0 ? issue.VariantOf.Series.IssueCount : -1;
-            int volume = ParsePositiveInteger(issue.Volume);
+            int volume = year;
             int pageCount = issue.PageCount ?? issue.GcdStories.Where(story => story.PageCount.HasValue).Sum(story => story.PageCount!.Value);
 
             string writer = GetCredits(issue, "script");
@@ -282,16 +282,6 @@ namespace Application.Services.ComicService
                 .ToArray();
 
             return string.Join(", ", normalized);
-        }
-
-        private int ParsePositiveInteger(string value)
-        {
-            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) && parsed > 0)
-            {
-                return parsed;
-            }
-
-            return -1;
         }
 
         private (int Year, int Month, int Day) GetDateParts(GcdIssue issue)
