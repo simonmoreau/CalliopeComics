@@ -51,6 +51,12 @@ namespace WebApp.Controllers
             return series;
         }
 
+        [HttpGet("comicinfo")]
+        public async Task<string?> GetComicInfoDetail([FromQuery] string path, [FromQuery] string propertyName)
+        {
+            return await SendToMediator(new GetComicInfoDetailQuery(path, propertyName));
+        }
+
         [HttpGet("series/{id}")]
         public async Task<SeriesDto> GetSeriesDetails([FromRoute] int id)
         {
