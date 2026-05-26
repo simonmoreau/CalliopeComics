@@ -55,6 +55,14 @@ namespace Application.Series.Queries.SearchSeriesQuery
                 );
             }
 
+            if (request.Date.HasValue)
+            {
+                int year = request.Date.Value.Year;
+                seriesQuery = seriesQuery.Where(series =>
+                    series.YearBegan <= year &&
+                    (series.YearEnded == null || year <= series.YearEnded));
+            }
+
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             List<GcdSeries> seriesResults = await seriesQuery

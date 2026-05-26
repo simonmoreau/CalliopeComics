@@ -48,9 +48,9 @@ namespace WebApp.Tools
 
         [McpServerTool]
         [Description("Searches for comic book series based on a search text (Series name, publisher and publication year).")]
-        public async Task<string> SearchSeries([Description("The search text to find comic book series")] string searchText = "")
+        public async Task<string> SearchSeries([Description("The search text to find comic book series")] string searchText = "", [Description("Optional date to filter series running at that time")] DateTime? date = null)
         {
-            SearchSeriesQuery query = new SearchSeriesQuery(searchText);
+            SearchSeriesQuery query = new SearchSeriesQuery(searchText, date);
             List<SeriesDto> series = await _mediator.Send(query);
 
             if (series.Count == 0)

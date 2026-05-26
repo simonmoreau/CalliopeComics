@@ -23,6 +23,9 @@ namespace CLI
             [Option(CommandOptionType.SingleValue, ShortName = "q", LongName = "query", Description = "Search query", ShowInHelpText = true)]
             public string Query { get; set; }
 
+            [Option(CommandOptionType.SingleValue, ShortName = "d", LongName = "date", Description = "Optional date to filter series running at that time", ShowInHelpText = true)]
+            public DateTime? Date { get; set; }
+
             private readonly IMediator _mediator;
             private readonly IConsole _console;
 
@@ -34,7 +37,7 @@ namespace CLI
 
             protected async Task<int> OnExecute()
             {
-                var series = await _mediator.Send(new SearchSeriesQuery(Query));
+                var series = await _mediator.Send(new SearchSeriesQuery(Query, Date));
                 foreach (var s in series)
                 {
                     _console.WriteLine($"{s.Id}: {s.Name}");

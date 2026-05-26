@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Series.Queries.GetSerieDetailQuery;
 using Application.ComicInfo.Command.SetComicInfoDetailCommand;
+using Application.ComicInfo.Queries.GetComicInfoDetailQuery;
 
 namespace WebApp.Controllers
 {
@@ -45,9 +46,9 @@ namespace WebApp.Controllers
 
 
         [HttpGet("series")]
-        public async Task<List<SeriesDto>> GetSeries([FromQuery] string searchTerm)
+        public async Task<List<SeriesDto>> GetSeries([FromQuery] string searchTerm, [FromQuery] DateTime? date = null)
         {
-            List<SeriesDto> series = await SendToMediator(new SearchSeriesQuery(searchTerm));
+            List<SeriesDto> series = await SendToMediator(new SearchSeriesQuery(searchTerm, date));
             return series;
         }
 
