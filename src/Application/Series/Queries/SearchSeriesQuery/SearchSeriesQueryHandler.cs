@@ -26,11 +26,12 @@ namespace Application.Series.Queries.SearchSeriesQuery
                 return [];
             }
 
-            string[] caractersToRemoves = ["<", ">", "-", ",", "\"", "'", ";", ":", "&", "#", "(", ")", "[", "]", "{", "}"];
+            string[] caractersToRemoves = ["<", ">", ",", "\"", "'", ";", ":", "&", "#", "(", ")", "[", "]", "{", "}"];
             string sanitizedSearchTerm = caractersToRemoves.Aggregate(request.SearchTerm, (current, characterToRemove) => current.Replace(characterToRemove, " "));
             string[] terms = sanitizedSearchTerm.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             string[] normalizedTerms = terms
                 .Select(NormalizeSearchTerm)
+                .Where(x => !string.IsNullOrEmpty(x))
                 .ToArray();
 
             IQueryable<GcdSeries> seriesQuery = _context.GcdSeries
@@ -106,6 +107,11 @@ namespace Application.Series.Queries.SearchSeriesQuery
             if (int.TryParse(term, out int number))
             {
                 return number.ToString();
+            }
+
+            if (term == "-")
+            {
+                return "";
             }
 
             return term;
