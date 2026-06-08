@@ -52,7 +52,8 @@ namespace Application.Series.Queries.SearchSeriesQuery
                     EF.Functions.Like(series.YearBegan.ToString(), $"%{term}%") ||
                     EF.Functions.Like(series.TrackingNotes, $"%{term}%") ||
                     EF.Functions.Like(series.Notes, $"%{term}%") ||
-                    EF.Functions.Like(series.Publisher.Name, $"%{term}%")
+                    EF.Functions.Like(series.Publisher.Name, $"%{term}%") ||
+                    series.Id.ToString() == term 
                 );
             }
 
@@ -125,6 +126,11 @@ namespace Application.Series.Queries.SearchSeriesQuery
 
             foreach (string term in terms)
             {
+                if (ContainsIgnoreCase(series.Id.ToString(), term))
+                {
+                    score += 30;
+                }
+
                 if (ContainsIgnoreCase(series.Name, term) || ContainsIgnoreCase(series.SortName, term))
                 {
                     score += 20;
