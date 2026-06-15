@@ -53,6 +53,8 @@ namespace Application.Services.ComicService
 
         private string editorField;
 
+        private string translatorField;
+
         private string publisherField;
 
         private string imprintField;
@@ -81,6 +83,8 @@ namespace Application.Services.ComicService
 
         private string storyArcField;
 
+        private string storyArcNumberField;
+
         private string seriesGroupField;
 
         private AgeRating ageRatingField;
@@ -92,6 +96,10 @@ namespace Application.Services.ComicService
         private bool communityRatingFieldSpecified;
 
         private string mainCharacterOrTeamField;
+
+        private string tagsField;
+
+        private string gTINField;
 
         private string reviewField;
 
@@ -117,6 +125,7 @@ namespace Application.Services.ComicService
             this.lettererField = "";
             this.coverArtistField = "";
             this.editorField = "";
+            this.translatorField = "";
             this.publisherField = "";
             this.imprintField = "";
             this.genreField = "";
@@ -131,9 +140,12 @@ namespace Application.Services.ComicService
             this.locationsField = "";
             this.scanInformationField = "";
             this.storyArcField = "";
+            this.storyArcNumberField = "";
             this.seriesGroupField = "";
             this.ageRatingField = AgeRating.Unknown;
             this.mainCharacterOrTeamField = "";
+            this.tagsField = "";
+            this.gTINField = "";
             this.reviewField = "";
         }
 
@@ -419,6 +431,20 @@ namespace Application.Services.ComicService
 
         /// <remarks/>
         [System.ComponentModel.DefaultValueAttribute("")]
+        public string Translator
+        {
+            get
+            {
+                return this.translatorField;
+            }
+            set
+            {
+                this.translatorField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.ComponentModel.DefaultValueAttribute("")]
         public string Publisher
         {
             get
@@ -615,6 +641,20 @@ namespace Application.Services.ComicService
 
         /// <remarks/>
         [System.ComponentModel.DefaultValueAttribute("")]
+        public string StoryArcNumber
+        {
+            get
+            {
+                return this.storyArcNumberField;
+            }
+            set
+            {
+                this.storyArcNumberField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.ComponentModel.DefaultValueAttribute("")]
         public string SeriesGroup
         {
             get
@@ -693,6 +733,34 @@ namespace Application.Services.ComicService
             set
             {
                 this.mainCharacterOrTeamField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string Tags
+        {
+            get
+            {
+                return this.tagsField;
+            }
+            set
+            {
+                this.tagsField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.ComponentModel.DefaultValueAttribute("")]
+        public string GTIN
+        {
+            get
+            {
+                return this.gTINField;
+            }
+            set
+            {
+                this.gTINField = value;
             }
         }
 

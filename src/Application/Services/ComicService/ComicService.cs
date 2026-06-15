@@ -99,7 +99,7 @@ namespace Application.Services.ComicService
             (int year, int month, int day) = GetDateParts(issue);
             int seriesCount = issue.Series is not null && issue.Series.IssueCount > 0 ? issue.Series.IssueCount : -1;
             int alternateCount = issue.VariantOf?.Series is not null && issue.VariantOf.Series.IssueCount > 0 ? issue.VariantOf.Series.IssueCount : -1;
-            int volume = year;
+            int volume = issue.Series?.YearBegan > 0 ? issue.Series.YearBegan : year;
             int pageCount = issue.PageCount ?? issue.GcdStories.Where(story => story.PageCount.HasValue).Sum(story => story.PageCount!.Value);
 
             string writer = GetCredits(issue, "script");
@@ -113,7 +113,7 @@ namespace Application.Services.ComicService
             string characters = GetCaracters(issue);
             string teams = GetTeams(issue);
             string storyArc = JoinDistinct(issue.GcdStories.Select(story => story.Feature));
-            string summaryFromStories = JoinDistinct(issue.GcdStories.Select(story => story.Synopsis));
+            string summaryFromStories = JoinDistinct(issue.GcdStories.SelectMany(story => new[] { story.Synopsis, story.FirstLine, story.Notes }));
             string web = issue.Series?.Publisher?.Url ?? issue.IndiciaPublisher?.Url ?? string.Empty;
             string gcdWeb = $"https://www.comics.org/issue/{issue.Id}/";
             string issueNuber = issue.Number;
@@ -135,7 +135,7 @@ namespace Application.Services.ComicService
                 AlternateNumber = issue.VariantOf?.Number ?? string.Empty,
                 AlternateCount = alternateCount,
                 Summary = !string.IsNullOrWhiteSpace(summaryFromStories) ? summaryFromStories : (issue.NoTitle == 0 ? issue.Title : string.Empty),
-                Notes = JoinDistinct(new[] { issue.Notes, issue.Editing }),
+                Notes = issue.Notes,
                 Year = year,
                 Month = month,
                 Day = day,
@@ -146,13 +146,13 @@ namespace Application.Services.ComicService
                 Letterer = letterer,
                 CoverArtist = coverArtist,
                 Editor = editor,
-                Publisher = issue.IndiciaPublisher?.Name ?? issue.Series?.Publisher?.Name ?? string.Empty,
-                Imprint = issue.IndiciaPublisher?.Name ?? string.Empty,
+                Publisher = issue.Series?.Publisher?.Name ?? issue.IndiciaPublisher?.Name ?? string.Empty,
+                Imprint = issue.Brand?.Name ?? string.Empty,
                 Genre = genre,
                 Web = JoinDistinct(new[] { gcdWeb }),
                 PageCount = pageCount,
                 LanguageISO = issue.Series?.Language?.Code ?? string.Empty,
-                Format = issue.Series?.Format ?? issue.Series?.PublishingFormat ?? string.Empty,
+                Format = issue.Series?.PublishingFormat ?? issue.Series?.Format ?? issue.Series?.PublicationType?.Name ?? string.Empty,
                 BlackAndWhite = GetBlackAndWhite(issue),
                 Manga = GetManga(issue, genre),
                 Characters = characters,
@@ -165,6 +165,7 @@ namespace Application.Services.ComicService
                 Pages = Array.Empty<ComicPageInfo>(),
                 CommunityRating = 0,
                 CommunityRatingSpecified = false,
+                GTIN = !string.IsNullOrWhiteSpace(issue.Isbn) ? issue.Isbn : (!string.IsNullOrWhiteSpace(issue.Barcode) ? issue.Barcode : string.Empty),
                 MainCharacterOrTeam = GetMainCharacterOrTeam(issue, teams),
                 Review = string.Empty
             };
@@ -201,6 +202,23 @@ namespace Application.Services.ComicService
                     if (!string.IsNullOrWhiteSpace(name))
                     {
                         names.Add(name);
+                    }
+                }
+
+                // Also parse the story.Characters text field for additional names
+                if (!string.IsNullOrWhiteSpace(story.Characters))
+                {
+                    string[] textChars = story.Characters.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    foreach (string textChar in textChars)
+                    {
+                        // Remove parenthetical notes like " (villain)", " (death)" etc.
+                        string cleanName = textChar.Split('(', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)[0].Trim();
+                        // Remove bracket aliases like " [Reed Richards]"
+                        cleanName = cleanName.Split('[', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)[0].Trim();
+                        if (!string.IsNullOrWhiteSpace(cleanName))
+                        {
+                            names.Add(cleanName);
+                        }
                     }
                 }
             }
@@ -338,12 +356,19 @@ namespace Application.Services.ComicService
         private YesNo GetBlackAndWhite(GcdIssue issue)
         {
             string normalized = Normalize(issue.Series?.Color ?? string.Empty);
-            if (normalized.Contains("BLACKANDWHITE", StringComparison.Ordinal) || normalized.Contains("BW", StringComparison.Ordinal))
+            if (normalized.Contains("BLACKANDWHITE", StringComparison.Ordinal) || 
+                normalized.Contains("BW", StringComparison.Ordinal) ||
+                normalized.Contains("MONOCHROME", StringComparison.Ordinal))
             {
                 return YesNo.Yes;
             }
 
-            if (normalized.Contains("COLOR", StringComparison.Ordinal))
+            if (normalized.Contains("COLOR", StringComparison.Ordinal) ||
+                normalized.Contains("COLOUR", StringComparison.Ordinal) ||
+                normalized.Contains("COLORI", StringComparison.Ordinal) ||
+                normalized.Contains("FARBIG", StringComparison.Ordinal) ||
+                normalized.Contains("COULEUR", StringComparison.Ordinal) ||
+                normalized.Contains("KLEUR", StringComparison.Ordinal))
             {
                 return YesNo.No;
             }
@@ -382,7 +407,7 @@ namespace Application.Services.ComicService
                 return AgeRating.M;
             }
 
-            if (normalized == "TEEN" || normalized == "T")
+            if (normalized == "TEEN" || normalized == "T" || normalized == "RATEDT" || normalized == "RATEDT+")
             {
                 return AgeRating.Teen;
             }
@@ -390,6 +415,36 @@ namespace Application.Services.ComicService
             if (normalized == "EVERYONE" || normalized == "E" || normalized == "ALLAGES")
             {
                 return AgeRating.Everyone;
+            }
+
+            if (normalized == "EVERYONE10" || normalized == "E10" || normalized == "E10+")
+            {
+                return AgeRating.Everyone10;
+            }
+
+            if (normalized == "MATURE17" || normalized == "M17" || normalized == "M17+")
+            {
+                return AgeRating.Mature17;
+            }
+
+            if (normalized == "RATEDA" || normalized == "ADULTSONLY18" || normalized == "A18" || normalized == "A18+")
+            {
+                return AgeRating.AdultsOnly18;
+            }
+
+            if (normalized == "MA15" || normalized == "MA15+")
+            {
+                return AgeRating.MA15;
+            }
+
+            if (normalized == "R18" || normalized == "R18+")
+            {
+                return AgeRating.R18;
+            }
+
+            if (normalized == "X18" || normalized == "X18+")
+            {
+                return AgeRating.X18;
             }
 
             return AgeRating.Unknown;
