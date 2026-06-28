@@ -72,6 +72,12 @@ namespace WebApp
                 .WithTools<GcdTools>()
                 .WithTools<ComicTools>();
 
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(10);
+                options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(5);
+            });
+
             WebApplication app = builder.Build();
 
             bool shouldMigrate = Array.Exists(args, argument => string.Equals(argument, "--migrate", StringComparison.OrdinalIgnoreCase));
