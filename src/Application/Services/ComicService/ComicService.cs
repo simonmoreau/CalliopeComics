@@ -117,7 +117,8 @@ namespace Application.Services.ComicService
             string web = issue.Series?.Publisher?.Url ?? issue.IndiciaPublisher?.Url ?? string.Empty;
             string gcdWeb = $"https://www.comics.org/issue/{issue.Id}/";
             string issueNuber = issue.Number;
-            
+            string serieGroupTrimmed = seriesGroup ?? string.Empty;
+            serieGroupTrimmed = serieGroupTrimmed.Trim();
 
             if (issue.Number.Contains("nn"))
             {
@@ -160,7 +161,7 @@ namespace Application.Services.ComicService
                 Locations = string.Empty,
                 ScanInformation = issue.IndiciaPrinterSourcedBy,
                 StoryArc = storyArc,
-                SeriesGroup = seriesGroup ?? string.Empty,
+                SeriesGroup = serieGroupTrimmed,
                 AgeRating = GetAgeRating(issue.Rating),
                 Pages = Array.Empty<ComicPageInfo>(),
                 CommunityRating = 0,

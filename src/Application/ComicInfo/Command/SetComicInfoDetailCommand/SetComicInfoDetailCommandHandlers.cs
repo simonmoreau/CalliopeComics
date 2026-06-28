@@ -107,6 +107,8 @@ namespace Application.ComicInfo.Command.SetComicInfoDetailCommand
 
             Directory.CreateDirectory(extractDirectoryPath);
 
+            comicInfo.SanitizeStrings();
+
             XmlSerializer serializer = new XmlSerializer(typeof(Application.Services.ComicService.ComicInfo));
             using (FileStream xmlFileStream = new FileStream(xmlFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
