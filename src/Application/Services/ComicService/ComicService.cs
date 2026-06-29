@@ -89,6 +89,94 @@ namespace Application.Services.ComicService
             return extension is ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp" or ".tif" or ".tiff";
         }
 
+        public async Task<string> SaveComicInfo(ComicInfo comicInfo, string comicsPath, CancellationToken cancellationToken = default)
+        {
+            if (comicInfo is null)
+            {
+                throw new ArgumentNullException(nameof(comicInfo));
+            }
+
+            if (string.IsNullOrWhiteSpace(comicsPath))
+            {
+                throw new ArgumentException("The comic archive path is required.", nameof(comicsPath));
+            }
+
+            if (!File.Exists(comicsPath))
+            {
+                throw new FileNotFoundException("The comic archive file was not found.", comicsPath);
+            }
+
+            string extension = Path.GetExtension(comicsPath).ToLowerInvariant();
+            if (extension is not ".cbz" and not ".cbr" and not ".crz" and not ".crb")
+            {
+                throw new NotSupportedException($"Unsupported comic archive extension '{extension}'.");
+            }
+
+            if (!ArchiveFactory.IsArchive(comicsPath, out ArchiveType? detectedType) || detectedType is null)
+            {
+                throw new InvalidOperationException("Could not detect archive type from file content.");
+            }
+
+            bool isRarBasedArchive = detectedType == ArchiveType.Rar;
+            string extractDirectoryPath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_extract_{Guid.NewGuid():N}");
+            string xmlFilePath = Path.Combine(extractDirectoryPath, "ComicInfo.xml");
+            string temporaryArchivePath = Path.Combine(Path.GetTempPath(), $"calliope_comicinfo_archive_{Guid.NewGuid():N}.cbz");
+
+            Directory.CreateDirectory(extractDirectoryPath);
+
+            comicInfo.SanitizeStrings();
+
+            XmlSerializer serializer = new XmlSerializer(typeof(ComicInfo));
+            using (FileStream xmlFileStream = new FileStream(xmlFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                serializer.Serialize(xmlFileStream, comicInfo);
+            }
+
+            string resultPath = comicsPath;
+            try
+            {
+                if (isRarBasedArchive)
+                {
+                    using RarArchive archive = RarArchive.Open(comicsPath);
+                    foreach (IArchiveEntry entry in archive.Entries.Where(archiveEntry => !archiveEntry.IsDirectory))
+                    {
+                        entry.WriteToDirectory(extractDirectoryPath, new ExtractionOptions
+                        {
+                            ExtractFullPath = true,
+                            Overwrite = true
+                        });
+                    }
+
+                    ZipFile.CreateFromDirectory(extractDirectoryPath, temporaryArchivePath);
+                    resultPath = Path.ChangeExtension(comicsPath, ".cbz");
+                    File.Move(temporaryArchivePath, resultPath, true);
+                }
+                else
+                {
+                    using (ZipArchive archive = ZipFile.Open(comicsPath, ZipArchiveMode.Update))
+                    {
+                        archive.Entries.Where(entry => string.Equals(entry.FullName, "ComicInfo.xml", StringComparison.OrdinalIgnoreCase)).ToList()
+                            .ForEach(entry => entry.Delete());
+                        await archive.CreateEntryFromFileAsync(xmlFilePath, Path.GetFileName(xmlFilePath));
+                    }
+                }
+
+                return resultPath;
+            }
+            finally
+            {
+                if (Directory.Exists(extractDirectoryPath))
+                {
+                    Directory.Delete(extractDirectoryPath, true);
+                }
+
+                if (File.Exists(temporaryArchivePath))
+                {
+                    File.Delete(temporaryArchivePath);
+                }
+            }
+        }
+
         public ComicInfo CreateComicInfo(GcdIssue issue, string? seriesGroup = null)
         {
             if (issue is null)

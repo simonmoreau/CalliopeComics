@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Series.Queries.GetSerieDetailQuery;
 using Application.ComicInfo.Command.SetComicInfoDetailCommand;
+using Application.ComicInfo.Command.SetComicInfoPropertyCommand;
 using Application.ComicInfo.Queries.GetComicInfoDetailQuery;
 
 namespace WebApp.Controllers
@@ -56,6 +57,12 @@ namespace WebApp.Controllers
         public async Task<string?> GetComicInfoDetail([FromQuery] string path, [FromQuery] string propertyName)
         {
             return await SendToMediator(new GetComicInfoDetailQuery(path, propertyName));
+        }
+
+        [HttpGet("comicinfo/write")]
+        public async Task SetComicInfoProperty([FromQuery] string path, [FromQuery] string propertyName, [FromQuery] string value)
+        {
+            await SendToMediator(new SetComicInfoPropertyCommand(path, propertyName, value));
         }
 
         [HttpGet("series/{id}")]
